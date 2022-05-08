@@ -16,22 +16,41 @@ WINDOW_ICON     =   ICON_PATH + "house_icon.png"
 WEATHER_WINDOW_WIDTH    =   WINDOW_SIZE[0] - 4
 WEATHER_WINDOW_HEIGHT   =   150
 
-CLOUD_ICON      =   W_ICON_PATH + "clouds_2.png"   
-SUN_ICON        =   W_ICON_PATH + "sun_2.png"
+CLOUD_ICON          =   W_ICON_PATH + "clouds.png"   
+CLOUDY_NIGHT_ICON   =   W_ICON_PATH + "cloudy_night.png"
+SUN_ICON            =   W_ICON_PATH + "sun.png"
+NIGHT_ICON          =   W_ICON_PATH + "night.png"
 
 
 # Defining colors 
-BLACK           =   [0,0,0,155]
-WHITE           =   [255,255,255]
-BLUE_SKY        =   [64,207,255]
-LIGHT_BLUE      =   [120,120,255]
-SUPER_LIGHT_BLUE=   [150,150,255]
-HIPER_LIGHT_BLUE=   [175,175,255]
-BLUE_RAIN       =   [165,180,220]
-LIGHT_BLUE_RAIN =   [165,180,200]
-VLIGHT_BLUE_RAIN=   [165,180,180]
-RAIN_COLORS     =   [BLUE_RAIN, LIGHT_BLUE_RAIN, VLIGHT_BLUE_RAIN]
+BLACK               =   [0,0,0,155]
+WHITE               =   [255,255,255]
+BLUE_SKY            =   [64,207,255]
+LIGHT_BLUE          =   [120,120,255]
+SUPER_LIGHT_BLUE    =   [150,150,255]
+HIPER_LIGHT_BLUE    =   [175,175,255]
 
+BLUE_RAIN           =   [165,180,220]#[255,0,0]
+LIGHT_BLUE_RAIN     =   [165,180,200]#[0,255,0]
+VERY_LIGHT_BLUE_RAIN=   [165,180,180]#[0,0,255]
+RAIN_COLORS         =   [BLUE_RAIN, LIGHT_BLUE_RAIN, VERY_LIGHT_BLUE_RAIN]
+
+# Rain Variables
+DROP_NUMBER         =   50
+
+DROP_THICK          =   2
+DROP_THIN           =   1
+DROP_THICKNESS      =   [DROP_THICK, DROP_THIN]
+
+DROP_LEN_LONG       =   20#5
+DROP_LEN_SHORT      =   10#3
+DROP_LEN_VERY_SHORT =   5
+DROP_LEN            =   [DROP_LEN_LONG, DROP_LEN_SHORT, DROP_LEN_VERY_SHORT]
+
+DROP_FAST           =   2
+DROP_SLOW           =   1.5 
+DROP_VERY_SLOW      =   1
+DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
 
 # Buttons configuration
 BTN_ELEVATION       =   3
@@ -88,8 +107,8 @@ class Button:
         self.bottom_rect.midtop = self.top_rect.midtop
         self.bottom_rect.height = self.top_rect.height + self.dynamic_elecation
 
-        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 2)
-        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 2)
+        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 6)
+        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 6)
         screen.blit(self.text_surf, self.text_rect)
         self.check_click(function)
 
@@ -108,11 +127,14 @@ class Button:
         else:
             self.dynamic_elecation = self.elevation
             self.top_color = self.color_off
+        
+    def get_Rect(self):
+        return self.top_rect
+        
 
 # Buttons Functions
 def btn_print():
     print("Button press")
-
 
 # Water drop class - Rain simulation
 
@@ -122,49 +144,98 @@ class Point():
         self.y = y
     
 class WaterDrop():
-    def __init__(self):
-        pass
-    def water_drop_move():
+    def __init__(self, start_pos, end_pos, length, thickness, colour, velocity = 1):
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        self.length = length
+        self.thickness = thickness
+        self.colour = colour
+        self.velocity = velocity
+
+    def drop_move():
         pass
 
-def print_sunny_day(screen):
-    x,y = pygame.mouse.get_pos()
+def print_sunny_day(screen, rect):
+    # Changing the background of the weather API - Sunny day
     sun = pygame.image.load(SUN_ICON)
-    sun_rect = sun.get_rect()
-    sun_rect.x,sun_rect.y = 100, 0
+    sun_rect = sun.get_rect().clip(rect)
     
-    while x>0 and x<WEATHER_WINDOW_WIDTH and y>0 and y<WEATHER_WINDOW_HEIGHT:
-        # Changing the background color of the weather
-        bg = pygame.Rect(2,2,WEATHER_WINDOW_WIDTH,WEATHER_WINDOW_HEIGHT-4)       
+    screen.blit(sun,sun_rect)
+
+
+def print_rainy_day(screen, rect, rain):
+    # Changing the background of the weather API - Cloudy day
+    cloud = pygame.image.load(CLOUD_ICON)
+    cloud_rect = cloud.get_rect().clip(rect)
+    
+    screen.blit(cloud,cloud_rect)
+
+    # Let's move each drop of the rain array to simulate the drop is moving
+    # In each iteration of the while loop the drop will move one pixel in 
+    # y axis
+    for drop in rain:
+        pygame.draw.line(screen, 
+                        drop.colour, 
+                        [drop.start_pos.x,drop.start_pos.y], 
+                        [drop.end_pos.x,drop.end_pos.y], 
+                        drop.thickness)
         
-        screen.blit(sun,sun_rect)
-        pygame.draw.rect(screen,BLUE_SKY,bg,0)
+        drop.start_pos.y = drop.start_pos.y + drop.velocity
+        drop.end_pos.y = drop.start_pos.y + drop.length
+
+        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
+            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
+            drop.end_pos.x = drop.start_pos.x
+            drop.start_pos.y = 2
+            drop.end_pos.y = drop.start_pos.y + drop.length
+
+
+def print_cloudy_day(screen, rect):
+    # Changing the background of the weather API - Cloudy day
+    cloud = pygame.image.load(CLOUD_ICON)
+    cloud_rect = cloud.get_rect().clip(rect)
     
+    screen.blit(cloud,cloud_rect)
     
 
+def print_dark_night(screen, rect):
+    # Changing the background of the weather API - Night
+    night = pygame.image.load(NIGHT_ICON)
+    night_rect = night.get_rect().clip(rect)
+    
+    screen.blit(night,night_rect)
 
-def print_rainy_day(screen):
-    pass
 
-def print_cloudy_day(screen):
-    x,y = pygame.mouse.get_pos()
-    if x>0 and x<WEATHER_WINDOW_WIDTH and y>0 and y< WEATHER_WINDOW_HEIGHT:
-        # Changing the background color of the weather
-        bg = pygame.Rect(0,0,WEATHER_WINDOW_WIDTH,WEATHER_WINDOW_HEIGHT)
+def print_cloudy_night(screen, rect):
+    # Changing the background of the weather API - Cloudy night
+    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
+    cloudy_night_rect = cloud_night.get_rect().clip(rect)
+    
+    screen.blit(cloud_night,cloudy_night_rect)
+
+
+def print_rainy_night(screen, rect, rain):
+    # Changing the background of the weather API - Cloudy night
+    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
+    cloudy_night_rect = cloud_night.get_rect().clip(rect)
+    
+    screen.blit(cloud_night,cloudy_night_rect)
+
+    # Let's move each drop of the rain array to simulate the drop is moving
+    # In each iteration of the while loop the drop will move one pixel in 
+    # y axis
+    for drop in rain:
+        pygame.draw.line(screen, 
+                        drop.colour, 
+                        [drop.start_pos.x,drop.start_pos.y], 
+                        [drop.end_pos.x,drop.end_pos.y], 
+                        drop.thickness)
         
-        cloud_bg        = pygame.image.load(CLOUD_ICON)
-        cloud_bg_rect   = cloud_bg.get_rect()
-        
-        pygame.draw.rect(screen,LIGHT_BLUE,bg,0)
-        screen.blit(cloud_bg,cloud_bg_rect)
-    
-    
+        drop.start_pos.y = drop.start_pos.y + drop.velocity
+        drop.end_pos.y = drop.start_pos.y + drop.length
 
-def print_dark_night(screen):
-    pass
-
-def print_cloudy_night(screen):
-    pass
-
-def print_rainy_night(screen):
-    pass
+        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
+            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
+            drop.end_pos.x = drop.start_pos.x
+            drop.start_pos.y = 2
+            drop.end_pos.y = drop.start_pos.y + drop.length
