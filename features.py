@@ -1,6 +1,9 @@
 
 import pygame, os, random
 
+# Variable for infinite loop of the app
+DoIt            =   True
+
 # Constants and variables
 DIR_PATH        =   os.path.dirname(os.path.abspath(__file__))
 ICON_PATH       =   DIR_PATH + "/config/icons/"
@@ -10,42 +13,51 @@ WINDOW_SIZE     =   [314,472]   # 8cm (width) x 12 cm(height) x 100 ppp = 13 inc
 WINDOW_CAP      =   "Domotic System"
 WINDOW_ICON     =   ICON_PATH + "house_icon.png"
 
-WEATHER_WINDOW_WIDTH    =   WINDOW_SIZE[0]
+WEATHER_WINDOW_WIDTH    =   WINDOW_SIZE[0] - 4
 WEATHER_WINDOW_HEIGHT   =   150
 
 CLOUD_ICON      =   W_ICON_PATH + "clouds_2.png"   
+SUN_ICON        =   W_ICON_PATH + "sun_2.png"
 
 
 # Defining colors 
-BLACK           =   [0,0,0]
+BLACK           =   [0,0,0,155]
 WHITE           =   [255,255,255]
 BLUE_SKY        =   [64,207,255]
 LIGHT_BLUE      =   [120,120,255]
 SUPER_LIGHT_BLUE=   [150,150,255]
 HIPER_LIGHT_BLUE=   [175,175,255]
+BLUE_RAIN       =   [165,180,220]
+LIGHT_BLUE_RAIN =   [165,180,200]
+VLIGHT_BLUE_RAIN=   [165,180,180]
+RAIN_COLORS     =   [BLUE_RAIN, LIGHT_BLUE_RAIN, VLIGHT_BLUE_RAIN]
 
 
 # Buttons configuration
 BTN_ELEVATION       =   3
-BTN_SETTINGS_WIDTH  =   WINDOW_SIZE[0] - 4
-BTN_SETTINGS_HEIGHT =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
-BTN_SETTINGS_POS    =   [2,0*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
+
+BTN_WEATHER_WIDTH   =   WEATHER_WINDOW_WIDTH
+BTN_WEATHER_HEIGHT  =   WEATHER_WINDOW_HEIGHT - 4
+BTN_WEATHER_POS     =   [2,2]
+
 BTN_LIGHTS_WIDTH    =   WINDOW_SIZE[0]/2 - 2
 BTN_LIGHTS_HEIGHT   =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2 
-BTN_LIGHTS_POS      =   [2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT]
+BTN_LIGHTS_POS      =   [2,0*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 BTN_TV_WIDTH        =   WINDOW_SIZE[0]/2 - 4
 BTN_TV_HEIGHT       =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_TV_POS          =   [WINDOW_SIZE[0]/2 + 2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT]
+BTN_TV_POS          =   [WINDOW_SIZE[0]/2 + 2,0*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 BTN_AIR_WIDTH       =   WINDOW_SIZE[0]/2 - 2
 BTN_AIR_HEIGHT      =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_AIR_POS         =   [2,2*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT]
+BTN_AIR_POS         =   [2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 BTN_APPLIANCE_WIDTH =   WINDOW_SIZE[0]/2 - 4
 BTN_APPLIANCE_HEIGHT=   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_APPLIANCE_POS   =   [WINDOW_SIZE[0]/2 + 2,2*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT]
+BTN_APPLIANCE_POS   =   [WINDOW_SIZE[0]/2 + 2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 BTN_BLINDS_WIDTH    =   WINDOW_SIZE[0] - 4
 BTN_BLINDS_HEIGHT   =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
-BTN_BLINDS_POS      =   [2,3*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT]
-
+BTN_BLINDS_POS      =   [2,2*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT +2]
+BTN_SETTINGS_WIDTH  =   WINDOW_SIZE[0] - 4
+BTN_SETTINGS_HEIGHT =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
+BTN_SETTINGS_POS    =   [2,3*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 
 class Button:
     def __init__(self,text,pos,width,height,elevation,font, color_on, color_off):
@@ -76,8 +88,8 @@ class Button:
         self.bottom_rect.midtop = self.top_rect.midtop
         self.bottom_rect.height = self.top_rect.height + self.dynamic_elecation
 
-        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 12)
-        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 12)
+        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 2)
+        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 2)
         screen.blit(self.text_surf, self.text_rect)
         self.check_click(function)
 
@@ -99,20 +111,33 @@ class Button:
 
 # Buttons Functions
 def btn_print():
-    print("Boton pulsado")
+    print("Button press")
 
 
+# Water drop class - Rain simulation
+
+class Point():
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+    
 class WaterDrop():
     def __init__(self):
         pass
-    def water_drop_fall_off():
+    def water_drop_move():
         pass
 
 def print_sunny_day(screen):
     x,y = pygame.mouse.get_pos()
-    if x>=0 and x<=WEATHER_WINDOW_WIDTH and y>=0 and y<= WEATHER_WINDOW_HEIGHT:
+    sun = pygame.image.load(SUN_ICON)
+    sun_rect = sun.get_rect()
+    sun_rect.x,sun_rect.y = 100, 0
+    
+    while x>0 and x<WEATHER_WINDOW_WIDTH and y>0 and y<WEATHER_WINDOW_HEIGHT:
         # Changing the background color of the weather
-        bg = pygame.Rect(0,0,WEATHER_WINDOW_WIDTH,WEATHER_WINDOW_HEIGHT)       
+        bg = pygame.Rect(2,2,WEATHER_WINDOW_WIDTH,WEATHER_WINDOW_HEIGHT-4)       
+        
+        screen.blit(sun,sun_rect)
         pygame.draw.rect(screen,BLUE_SKY,bg,0)
     
     
@@ -123,7 +148,7 @@ def print_rainy_day(screen):
 
 def print_cloudy_day(screen):
     x,y = pygame.mouse.get_pos()
-    if x>=0 and x<=WEATHER_WINDOW_WIDTH and y>=0 and y<= WEATHER_WINDOW_HEIGHT:
+    if x>0 and x<WEATHER_WINDOW_WIDTH and y>0 and y< WEATHER_WINDOW_HEIGHT:
         # Changing the background color of the weather
         bg = pygame.Rect(0,0,WEATHER_WINDOW_WIDTH,WEATHER_WINDOW_HEIGHT)
         
