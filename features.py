@@ -133,6 +133,19 @@ class CurrentWeather():
         try: self.snow_volume = int(self.info['snow']['1h'])
         except: pass
 
+        # Getting the temperature & humidity
+        try: 
+            self.temp = int(self.info['main']['temp'])
+            self.temp_max = int(self.info['main']['temp_max'])
+            self.temp_min = int(self.info['main']['temp_min'])
+            self.feels_like = int(self.info['main']['feels_like'])
+            self.humidity = int(self.info['main']['humidity'])
+        except: pass
+
+        # Getting the wind speed
+        try: self.wind_speed = int(self.info['wind']['speed'])
+        except: pass
+
         # Now we change the global variables so we can read them from the interface file
         # and select the simulation to use in the Weather App Button
         now = datetime.now()

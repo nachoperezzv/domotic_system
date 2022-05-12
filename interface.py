@@ -80,17 +80,17 @@ while DoIt:
         
         # Checking if it's day/night, cloudy or rainy
         if cw.its_day:
-            if cw.cloud_percent > VALID_CLOUD_RATE: 
-                print_cloudy_day(screen, btn_weather.get_Rect())
-            elif cw.rain_volume > VALID_RAIN_RATE:
+            if cw.rain_volume > VALID_RAIN_RATE:
                 print_rainy_day(screen, btn_weather.get_Rect(), rain)
+            elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                print_cloudy_day(screen, btn_weather.get_Rect())
             else:
                 print_sunny_day(screen, btn_weather.get_Rect())            
         else: 
-            if cw.cloud_percent > VALID_CLOUD_RATE:
-                print_cloudy_night(screen, btn_weather.get_Rect())
-            elif cw.rain_volume > VALID_RAIN_RATE:
-                print_rainy_night(screen, btn_weather.get_Rect(), rain)
+            if cw.rain_volume > VALID_RAIN_RATE:
+                print_rainy_day(screen, btn_weather.get_Rect(), rain)
+            elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                print_cloudy_day(screen, btn_weather.get_Rect())
             else:
                 print_dark_night(screen, btn_weather.get_Rect())
             
