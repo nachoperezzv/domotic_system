@@ -9,6 +9,9 @@ screen = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption(WINDOW_CAP)
 pygame.display.set_icon(pygame.image.load(WINDOW_ICON))
 
+# Initializing the API
+cw = CurrentWeather()   # This is the call for Current weather API
+
 # Creating the buttons and panels
 btn_settings    =   Button("Settings",BTN_SETTINGS_POS,BTN_SETTINGS_WIDTH, BTN_SETTINGS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 btn_lights      =   Button("Lights", BTN_LIGHTS_POS, BTN_LIGHTS_WIDTH, BTN_LIGHTS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
@@ -51,11 +54,10 @@ while DoIt:
     end = time.time()
     # Handling the API through the time. It must have been X seconds since last call. 
     # X (the time in seconds) is determined by the TIMESTAMP variable
-    if (end-start) >= TIMESTAMP:
-        
+    if (end-start) >= TIMESTAMP:        
         # This calls the OpenWeather API and get the information that is required
-        weather_info = get_weather_info()
-        print(end-start)
+        cw.get_weather_info()
+
         # Let´s restart the timer so it does another call to the API in the selected timestamp
         start   = time.time()
         end     = start
@@ -75,13 +77,23 @@ while DoIt:
     # What is the weather like ? - Simulation
     mx,my = pygame.mouse.get_pos()
     if (mx>2 and mx<WEATHER_WINDOW_WIDTH and my>2 and my<WEATHER_WINDOW_HEIGHT - 2) :
-        # print_sunny_day(screen, btn_weather.get_Rect())
-        # print_cloudy_day(screen, btn_weather.get_Rect())
-        # print_rainy_day(screen, btn_weather.get_Rect(), rain)
-        # print_dark_night(screen, btn_weather.get_Rect())
-        # print_cloudy_night(screen, btn_weather.get_Rect())
-        print_rainy_night(screen, btn_weather.get_Rect(), rain)
-
+        
+        # Checking if it's day/night, cloudy or rainy
+        if cw.its_day:
+            if cw.cloud_percent > VALID_CLOUD_RATE: 
+                print_cloudy_day(screen, btn_weather.get_Rect())
+            elif cw.rain_volume > VALID_RAIN_RATE:
+                print_rainy_day(screen, btn_weather.get_Rect(), rain)
+            else:
+                print_sunny_day(screen, btn_weather.get_Rect())            
+        else: 
+            if cw.cloud_percent > VALID_CLOUD_RATE:
+                print_cloudy_night(screen, btn_weather.get_Rect())
+            elif cw.rain_volume > VALID_RAIN_RATE:
+                print_rainy_night(screen, btn_weather.get_Rect(), rain)
+            else:
+                print_dark_night(screen, btn_weather.get_Rect())
+            
         # Let's just update the surface we are changing in order to save CPU time
         pygame.display.update(btn_weather.get_Rect())
     

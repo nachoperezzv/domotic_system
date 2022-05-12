@@ -1,8 +1,10 @@
-
-from itsdangerous import json
-import pygame, os, random
+from time import time
+import pygame, os, random, json
 import urllib.error, urllib.request 
 
+from datetime import datetime
+
+from sqlalchemy import true
 # Variable for infinite loop of the app
 DoIt            =   True
 
@@ -55,7 +57,7 @@ DROP_VERY_SLOW      =   1
 DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
 
 # Time Variables
-TIMESTAMP           =   8 #secs
+TIMESTAMP           =   3 #secs
 
 # API Variables 
 API_url             = "https://api.openweathermap.org/data/2.5/weather?"
@@ -65,6 +67,84 @@ API_units           = "&units=metric"
 
 API                 = API_url + API_city + API_units + API_key
 
+class CurrentWeather():
+    def __init__(self):
+        # Initializing the attributes of the class
+        self.description    = ""
+        self.temp           = 0
+        self.feels_like     = 0
+        self.humidity       = 0
+        self.temp_min       = 0
+        self.temp_max       = 0
+        self.wind_speed     = 0
+        self.cloud_percent  = 0
+        self.rain_volume    = 0
+        self.snow_volume    = 0
+        self.sunrise_hour   = ""
+        self.sunset_hour    = ""
+        self.timezone       = ""
+        self.its_day        = ""
+
+        self.get_weather_info()        
+    
+    def __calling_the_API(self):
+        try:  
+            self.req    = urllib.request.Request(API)
+            self.resp   = urllib.request.urlopen(self.req)
+            self.info   = json.loads(self.resp.read().decode('utf-8'))
+
+            self.resp.close()
+
+        except urllib.error.HTTPError as e:
+            pass
+
+    def get_weather_info(self):   
+        # Calling the API
+        self.__calling_the_API()
+        
+        # Getting info from the JSON response of the API
+        try: self.timezone = int(self.info['timezone'])
+        except: pass
+
+        # Getting the sunrise and sunset hour info
+        if self.timezone:
+            try:
+                ts = int(self.info['sys']['sunrise'] + self.timezone)
+                self.sunrise_hour = datetime.utcfromtimestamp(ts)
+            except: pass
+            try:
+                ts = int(self.info['sys']['sunset'] + self.timezone)
+                self.sunset_hour = datetime.utcfromtimestamp(ts)  
+            except: pass
+
+        # Getting weather description
+        try: self.description = int(self.info['weather']['description'])
+        except: pass
+
+        # Getting the cloud percentage
+        try: self.cloud_percent = int(self.info['clouds']['all'])
+        except: pass
+
+        # Getting the rain volume
+        try: self.rain_volume = int(self.info['rain']['1h'])
+        except: pass
+
+        # Getting the snow volume
+        try: self.snow_volume = int(self.info['snow']['1h'])
+        except: pass
+
+        # Now we change the global variables so we can read them from the interface file
+        # and select the simulation to use in the Weather App Button
+        now = datetime.now()
+        if self.sunrise_hour < now and self.sunset_hour > now:
+            self.its_day = True
+        else:
+            self.its_day = False
+        
+        
+
+VALID_CLOUD_RATE    = 30 #%
+VALID_RAIN_RATE     = 1
 
 # Buttons configuration
 BTN_ELEVATION       =   3
@@ -254,20 +334,8 @@ def print_rainy_night(screen, rect, rain):
             drop.start_pos.y = 2
             drop.end_pos.y = drop.start_pos.y + drop.length
 
-# Functions for the OpenWeather API call
 
-def get_weather_info():
-    try: 
-        req     = urllib.request.Request(API)
-        resp    = urllib.request.urlopen(req)
-        info    = manage_weather_info(resp.read().decode('utf-8'))
 
-        return info
-        
-    except urllib.error.HTTPError as e:
-        print("Api call Error!")
 
     
-
-def manage_weather_info(info):
-    print(info)
+        
