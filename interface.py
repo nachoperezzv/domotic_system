@@ -1,7 +1,6 @@
 from features import *
 
-import pygame, sys, json, time
-import urllib.request, urllib.error
+import pygame, sys, time
 
 # Initializing pygame window
 pygame.init()
@@ -20,6 +19,13 @@ btn_air         =   Button("Air", BTN_AIR_POS, BTN_AIR_WIDTH, BTN_AIR_HEIGHT, BT
 btn_appliance   =   Button("Appliance", BTN_APPLIANCE_POS, BTN_AIR_WIDTH, BTN_APPLIANCE_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 btn_blinds      =   Button("Blinds", BTN_BLINDS_POS, BTN_BLINDS_WIDTH, BTN_BLINDS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 btn_weather     =   Button("Weather", BTN_WEATHER_POS, BTN_WEATHER_WIDTH,BTN_WEATHER_HEIGHT,1,pygame.font.Font(None,30), SUPER_LIGHT_BLUE,LIGHT_BLUE)
+
+# Functions for the buttons 
+def btn_print():
+    pass
+
+def btn_configure_lights():
+    pass
 
 # Creating the rain - This is done just once
 rain = []
@@ -68,7 +74,7 @@ while DoIt:
     screen.fill(HIPER_LIGHT_BLUE)
     btn_weather.draw(screen, btn_print)
     btn_settings.draw(screen, btn_print)
-    btn_lights.draw(screen, btn_print)
+    btn_lights.draw(screen, btn_configure_lights)
     btn_tv.draw(screen, btn_print)
     btn_air.draw(screen, btn_print)
     btn_appliance.draw(screen, btn_print)
@@ -94,6 +100,25 @@ while DoIt:
             else:
                 print_dark_night(screen, btn_weather.get_Rect())
             
+        # Adding to the Weather App some widgets
+        offset = 15
+
+        location_text = pygame.font.Font(None,30).render(str("Alicante, ES"), True, WHITE)
+        location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(location_text,location_rect)
+
+        temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
+        temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(temp_text,temp_rect)
+        
+        description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
+        description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(description_text,description_rect)
+
+        text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
+        temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
+        temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
+        screen.blit(temp_minmax_text,temp_minmax_rect)
         # Let's just update the surface we are changing in order to save CPU time
         pygame.display.update(btn_weather.get_Rect())
     

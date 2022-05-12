@@ -1,4 +1,3 @@
-from time import time
 import pygame, os, random, json
 import urllib.error, urllib.request 
 
@@ -118,7 +117,10 @@ class CurrentWeather():
             except: pass
 
         # Getting weather description
-        try: self.description = int(self.info['weather']['description'])
+        try:
+            l = self.info['weather']
+            d = dict(l[0]) 
+            self.description = str(d['description'])
         except: pass
 
         # Getting the cloud percentage
@@ -238,11 +240,6 @@ class Button:
     def get_Rect(self):
         return self.top_rect
         
-
-# Buttons Functions
-def btn_print():
-    print("Button press")
-
 # Water drop class - Rain simulation
 
 class Point():
