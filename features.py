@@ -1,5 +1,7 @@
 
+from itsdangerous import json
 import pygame, os, random
+import urllib.error, urllib.request 
 
 # Variable for infinite loop of the app
 DoIt            =   True
@@ -36,7 +38,7 @@ VERY_LIGHT_BLUE_RAIN=   [165,180,180]#[0,0,255]
 RAIN_COLORS         =   [BLUE_RAIN, LIGHT_BLUE_RAIN, VERY_LIGHT_BLUE_RAIN]
 
 # Rain Variables
-DROP_NUMBER         =   50
+DROP_NUMBER         =   20
 
 DROP_THICK          =   2
 DROP_THIN           =   1
@@ -51,6 +53,18 @@ DROP_FAST           =   2
 DROP_SLOW           =   1.5 
 DROP_VERY_SLOW      =   1
 DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
+
+# Time Variables
+TIMESTAMP           =   8 #secs
+
+# API Variables 
+API_url             = "https://api.openweathermap.org/data/2.5/weather?"
+API_key             = "&appid=7e529a7df215e65c222ec1f24c8fe80c"
+API_city            = "&q=Alicante,ES"
+API_units           = "&units=metric" 
+
+API                 = API_url + API_city + API_units + API_key
+
 
 # Buttons configuration
 BTN_ELEVATION       =   3
@@ -239,3 +253,21 @@ def print_rainy_night(screen, rect, rain):
             drop.end_pos.x = drop.start_pos.x
             drop.start_pos.y = 2
             drop.end_pos.y = drop.start_pos.y + drop.length
+
+# Functions for the OpenWeather API call
+
+def get_weather_info():
+    try: 
+        req     = urllib.request.Request(API)
+        resp    = urllib.request.urlopen(req)
+        info    = manage_weather_info(resp.read().decode('utf-8'))
+
+        return info
+        
+    except urllib.error.HTTPError as e:
+        print("Api call Error!")
+
+    
+
+def manage_weather_info(info):
+    print(info)

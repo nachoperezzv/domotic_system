@@ -1,6 +1,7 @@
 from features import *
 
-import pygame, sys
+import pygame, sys, json, time
+import urllib.request, urllib.error
 
 # Initializing pygame window
 pygame.init()
@@ -35,6 +36,10 @@ for i in range(DROP_NUMBER):
 
     rain.append(drop)
 
+# Setting inicial variables for time
+start   = time.time()
+end     = start
+
 # Infinite loop that controls the APP
 while DoIt:
 
@@ -42,6 +47,20 @@ while DoIt:
     for event in pygame.event.get():
         if event.type == pygame.QUIT : 
             DoIt = False
+
+    end = time.time()
+    # Handling the API through the time. It must have been X seconds since last call. 
+    # X (the time in seconds) is determined by the TIMESTAMP variable
+    if (end-start) >= TIMESTAMP:
+        
+        # This calls the OpenWeather API and get the information that is required
+        weather_info = get_weather_info()
+        print(end-start)
+        # Let´s restart the timer so it does another call to the API in the selected timestamp
+        start   = time.time()
+        end     = start
+        
+        
 
     # Buttons 
     screen.fill(HIPER_LIGHT_BLUE)
@@ -70,6 +89,7 @@ while DoIt:
         # If none of the buttons have been pressed the we update the whole screen
         pygame.display.flip()
 
+    
 
 # Closing the app
 pygame.quit()
