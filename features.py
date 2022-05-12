@@ -61,7 +61,7 @@ TIMESTAMP           =   3 #secs
 # API Variables 
 API_url             = "https://api.openweathermap.org/data/2.5/weather?"
 API_key             = "&appid=7e529a7df215e65c222ec1f24c8fe80c"
-API_city            = "&q=Alicante,ES"
+API_city            = "&q=Oslo"
 API_units           = "&units=metric" 
 
 API                 = API_url + API_city + API_units + API_key
@@ -69,6 +69,8 @@ API                 = API_url + API_city + API_units + API_key
 class CurrentWeather():
     def __init__(self):
         # Initializing the attributes of the class
+        self.name           = ""
+        self.country        = ""
         self.description    = ""
         self.temp           = 0
         self.feels_like     = 0
@@ -101,6 +103,12 @@ class CurrentWeather():
         # Calling the API
         self.__calling_the_API()
         
+        # Getting the city and country
+        try: 
+            self.name = str(self.info['name'])
+            self.country = str(self.info['sys']['country'])
+        except: pass
+
         # Getting info from the JSON response of the API
         try: self.timezone = int(self.info['timezone'])
         except: pass

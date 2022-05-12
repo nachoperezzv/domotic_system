@@ -25,6 +25,7 @@ def btn_print():
     pass
 
 def btn_configure_lights():
+
     pass
 
 # Creating the rain - This is done just once
@@ -63,6 +64,7 @@ while DoIt:
     if (end-start) >= TIMESTAMP:        
         # This calls the OpenWeather API and get the information that is required
         cw.get_weather_info()
+        #print(cw.info)
 
         # Let´s restart the timer so it does another call to the API in the selected timestamp
         start   = time.time()
@@ -103,7 +105,7 @@ while DoIt:
         # Adding to the Weather App some widgets
         offset = 15
 
-        location_text = pygame.font.Font(None,30).render(str("Alicante, ES"), True, WHITE)
+        location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
         location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
         screen.blit(location_text,location_rect)
 
@@ -123,7 +125,7 @@ while DoIt:
         pygame.display.update(btn_weather.get_Rect())
     
     else:
-        # If none of the buttons have been pressed the we update the whole screen
+        # If none of the buttons have been pressed then we update the whole screen
         pygame.display.flip()
 
     
