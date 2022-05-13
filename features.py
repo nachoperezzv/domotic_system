@@ -442,11 +442,12 @@ class LightsWindow():
     def __init__(self):
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)      
-        
+    
         # Setting light plan
         self.light_plan_img =   pygame.image.load(LIGHTS_WINDOW_BG)
         self.light_plan_rect=   self.light_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
+        # Comment added in the main branch
     def print_lights_window(self, screen, functions):
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
