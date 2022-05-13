@@ -3,7 +3,6 @@ import urllib.error, urllib.request
 
 from datetime import datetime
 
-from sqlalchemy import true
 # Variable for infinite loop of the app
 DoIt            =   True
 
@@ -25,11 +24,11 @@ CLOUDY_NIGHT_ICON   =   WEATHER_ICON_PATH + "cloudy_night.png"
 SUN_ICON            =   WEATHER_ICON_PATH + "sun.png"
 NIGHT_ICON          =   WEATHER_ICON_PATH + "night.png"
 
-AIR_WINDOW_ICON     =   WINDOW_ICON_PATH + "air.png"
-TV_WINDOW_ICON      =   WINDOW_ICON_PATH + "tv.png"
-LIGHTS_WINDOW_iCON  =   WINDOW_ICON_PATH + "ligths.png"
-BLIND_WINDOW_ICON   =   WINDOW_ICON_PATH + "blind.png"
-APPLIANCE_WIN_ICON  =   WINDOW_ICON_PATH + "appliance.png"
+AIR_WINDOW_BG       =   WINDOW_ICON_PATH + "air.png"
+TV_WINDOW_BG        =   WINDOW_ICON_PATH + "tv.png"
+LIGHTS_WINDOW_BG    =   WINDOW_ICON_PATH + "lights.png"
+BLIND_WINDOW_BG     =   WINDOW_ICON_PATH + "blind.png"
+APPLIANCE_WIN_BG    =   WINDOW_ICON_PATH + "appliance.png"
 
 # Defining colors 
 BLACK               =   [0,0,0,155]
@@ -201,6 +200,10 @@ BTN_SETTINGS_WIDTH  =   WINDOW_SIZE[0] - 4
 BTN_SETTINGS_HEIGHT =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
 BTN_SETTINGS_POS    =   [2,3*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
 
+BTN_GO_BACK_WIDTH   =   30
+BTN_GO_BACK_HEIGHT  =   30
+BTN_GO_BACK_POS     =   [WINDOW_SIZE[0] - 45, 15]
+
 class Button:
     def __init__(self,text,pos,width,height,elevation,font, color_on, color_off):
     #Core attributes 
@@ -364,8 +367,6 @@ def print_rainy_night(screen, rect, rain):
 class MainWindow():
 
     def __init__(self):
-        self.window_number = 0
-
         self.btn_settings    =   Button("Settings",BTN_SETTINGS_POS,BTN_SETTINGS_WIDTH, BTN_SETTINGS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
         self.btn_lights      =   Button("Lights", BTN_LIGHTS_POS, BTN_LIGHTS_WIDTH, BTN_LIGHTS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
         self.btn_tv          =   Button("TV", BTN_TV_POS, BTN_TV_WIDTH, BTN_TV_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
@@ -425,24 +426,94 @@ class MainWindow():
         
         # Let's just update the surface we are changing in order to save CPU time
         pygame.display.update(self.btn_weather.get_Rect())
-           
+
+
+
+class WeatherWindow():
+    def __init__(self):
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+
+    def print_weather_window(self, screen, functions):
+        self.go_back_button.draw(screen, functions[0])
+
 
 class LightsWindow():
     def __init__(self):
-        pass
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)      
+        
+        # Setting light plan
+        self.light_plan_img =   pygame.image.load(LIGHTS_WINDOW_BG)
+        self.light_plan_rect=   self.light_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
+
+    def print_lights_window(self, screen, functions):
+        screen.blit(self.light_plan_img, self.light_plan_rect)
+        self.go_back_button.draw(screen, functions[0])
+        
+
+
+
 
 class TVWindow():
     def __init__(self):
-        pass
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+
+        # Setting TV plan
+        self.tv_plan_img    =   pygame.image.load(TV_WINDOW_BG)
+        self.tv_plan_rect   =   self.tv_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
+
+    def print_tv_window(self, screen, functions):
+        screen.blit(self.tv_plan_img, self.tv_plan_rect)
+        self.go_back_button.draw(screen, functions[0])
+
 
 class AirWindow():
     def __init__(self):
-        pass
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-class BlindWindow():
-    def __init__(self):
-        pass
+        # Setting Air plan
+        self.air_plan_img   = pygame.image.load(AIR_WINDOW_BG)
+        self.air_plan_rect  = self.air_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
+
+    def print_air_window(self, screen, functions): 
+        screen.blit(self.air_plan_img, self.air_plan_rect)
+        self.go_back_button.draw(screen, functions[0])
+
 
 class ApplianceWindow():
     def __init__(self):
-        pass
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+    
+        # Setting Appliance plan
+        self.aplliance_plan_img = pygame.image.load(APPLIANCE_WIN_BG)
+        self.aplliance_plan_rect= self.aplliance_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
+
+    def print_appliance_window(self, screen, functions):
+        screen.blit(self.aplliance_plan_img, self.aplliance_plan_rect)
+        self.go_back_button.draw(screen, functions[0])
+
+
+class BlindWindow():
+    def __init__(self):
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+
+        # Setting Blind plan
+        self.blind_plan_img =   pygame.image.load(BLIND_WINDOW_BG)
+        self.blind_plan_rect=   self.blind_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
+
+    def print_blind_window(self, screen, functions):
+        self.go_back_button.draw(screen, functions[0])
+
+
+class SettingsWindow():
+    def __init__(self):
+        # Button for going back to main window
+        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+
+    def print_settings_window(self, screen, functions):
+        self.go_back_button.draw(screen, functions[0])

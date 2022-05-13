@@ -28,26 +28,39 @@ cw = CurrentWeather()   # This is the call for Current weather API
 # Default window is main = 0
 current_screen = 0
 
-# Declaration of the object main_buttons from main_window class
+# Declaration of the object main_window from MainWindow class - this will contain the main buttons
 main_window = MainWindow()
 
-# Declaration of the object light_buttons from lights_window class
+# Declaration of the object weather_window from WeatherWindw class - this will contain the weather labels
+weather_window = WeatherWindow()
+
+# Declaration of the object light_window from LightWindow class - this will contain the light buttons
 light_window = LightsWindow()
 
-# Declaration of the object air_buttons from air_window class
-air_window = AirWindow()
-
-# Declaration of the object tv_buttons from tv_window class
+# Declaration of the object tv_window from TVWindow class - this will contain the tv buttons
 tv_window = TVWindow()
 
-# Declaration of the object blind_buttons from blind_window class
+# Declaration of the object air_window from AirWindow class - this will contain the air buttons
+air_window = AirWindow()
+
+# Declaration of the object appliance_window from ApplianceWindow class - this will contain appliance buttons
+appliance_window = ApplianceWindow()
+
+# Declaration of the object blind_window from BlindWindow class - this will contain the blind buttons
 blind_window = BlindWindow()
+
+# Declaration of the object settings_window from SettingsWindow class - this will contain the settings buttons
+settings_window = SettingsWindow()
 
 
 # -------------------------------
 # Creating the button functions |
 # -------------------------------
 # These functions will change the variable 'current_screen'. This one indicates which window we should print 
+
+def moving_to_main_window():
+    global current_screen
+    current_screen = 0
 
 def moving_to_weather_window():
     global current_screen
@@ -78,7 +91,14 @@ def moving_to_setting_window():
     current_screen = 7
 
 # Let's just create a vector that contains all the functions just so it will be easier to call the function print of the main buttons
-functions = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window, moving_to_air_window, moving_to_appliance_window ,moving_to_blind_window, moving_to_setting_window]
+main_functions      = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window, moving_to_air_window, moving_to_appliance_window ,moving_to_blind_window, moving_to_setting_window]
+weather_functions   = [moving_to_main_window]
+lights_functions    = [moving_to_main_window]
+tv_functions        = [moving_to_main_window]
+air_functions       = [moving_to_main_window]
+appliance_functions = [moving_to_main_window]
+blinds_functions    = [moving_to_main_window]
+settings_functions  = [moving_to_main_window]
 
 # --------------------------
 # Creating the rain vector |
@@ -135,21 +155,21 @@ while DoIt:
     screen.fill(HIPER_LIGHT_BLUE)
 
     if current_screen == 0:
-        main_window.print_main_window(screen, functions, cw, rain)
-    elif current_screen == 1:pass
-        # Draw Weather Window
-    elif current_screen == 2:pass
-        # Draw Light Window
-    elif current_screen == 3:pass
-        # Draw TV Window
-    elif current_screen == 4:pass
-        # Draw Air Window
-    elif current_screen == 5:pass
-        # Draw Appliance Window
-    elif current_screen == 6:pass
-        # Draw Blind Window
-    elif current_screen == 7:pass
-        # Draw Setting Window
+        main_window.print_main_window(screen, main_functions, cw, rain)
+    elif current_screen == 1:
+        weather_window.print_weather_window(screen, weather_functions)
+    elif current_screen == 2:
+        light_window.print_lights_window(screen, lights_functions)
+    elif current_screen == 3:
+        tv_window.print_tv_window(screen, tv_functions)
+    elif current_screen == 4:
+        air_window.print_air_window(screen, air_functions)
+    elif current_screen == 5:
+        appliance_window.print_appliance_window(screen, appliance_functions)
+    elif current_screen == 6:
+        blind_window.print_blind_window(screen, blinds_functions)
+    elif current_screen == 7:
+        settings_window.print_settings_window(screen, settings_functions)
 
     pygame.display.flip()
 
