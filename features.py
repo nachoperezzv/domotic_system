@@ -434,6 +434,7 @@ class WeatherWindow():
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
+        # Coment in the Between windows branch
     def print_weather_window(self, screen, functions):
         self.go_back_button.draw(screen, functions[0])
 
@@ -451,9 +452,6 @@ class LightsWindow():
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
         
-
-
-
 
 class TVWindow():
     def __init__(self):
