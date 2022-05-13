@@ -8,22 +8,28 @@ from sqlalchemy import true
 DoIt            =   True
 
 # Constants and variables
-DIR_PATH        =   os.path.dirname(os.path.abspath(__file__))
-ICON_PATH       =   DIR_PATH + "/config/icons/"
-W_ICON_PATH     =   DIR_PATH + "/config/weather_icons/"
+DIR_PATH            =   os.path.dirname(os.path.abspath(__file__))
+ICON_PATH           =   DIR_PATH + "/config/icons/"
+WEATHER_ICON_PATH   =   DIR_PATH + "/config/weather_icons/"
+WINDOW_ICON_PATH    =   DIR_PATH + "/config/window_icons/"
 
-WINDOW_SIZE     =   [314,472]   # 8cm (width) x 12 cm(height) x 100 ppp = 13 inches
-WINDOW_CAP      =   "Domotic System"
-WINDOW_ICON     =   ICON_PATH + "house_icon.png"
+WINDOW_SIZE         =   [314,472]   # 8cm (width) x 12 cm(height) x 100 ppp = 13 inches
+WINDOW_CAP          =   "Domotic System"
+WINDOW_ICON         =   ICON_PATH + "house_icon.png"
 
 WEATHER_WINDOW_WIDTH    =   WINDOW_SIZE[0] - 4
 WEATHER_WINDOW_HEIGHT   =   150
 
-CLOUD_ICON          =   W_ICON_PATH + "clouds.png"   
-CLOUDY_NIGHT_ICON   =   W_ICON_PATH + "cloudy_night.png"
-SUN_ICON            =   W_ICON_PATH + "sun.png"
-NIGHT_ICON          =   W_ICON_PATH + "night.png"
+CLOUD_ICON          =   WEATHER_ICON_PATH + "clouds.png"   
+CLOUDY_NIGHT_ICON   =   WEATHER_ICON_PATH + "cloudy_night.png"
+SUN_ICON            =   WEATHER_ICON_PATH + "sun.png"
+NIGHT_ICON          =   WEATHER_ICON_PATH + "night.png"
 
+AIR_WINDOW_ICON     =   WINDOW_ICON_PATH + "air.png"
+TV_WINDOW_ICON      =   WINDOW_ICON_PATH + "tv.png"
+LIGHTS_WINDOW_iCON  =   WINDOW_ICON_PATH + "ligths.png"
+BLIND_WINDOW_ICON   =   WINDOW_ICON_PATH + "blind.png"
+APPLIANCE_WIN_ICON  =   WINDOW_ICON_PATH + "appliance.png"
 
 # Defining colors 
 BLACK               =   [0,0,0,155]
@@ -61,7 +67,7 @@ TIMESTAMP           =   3 #secs
 # API Variables 
 API_url             = "https://api.openweathermap.org/data/2.5/weather?"
 API_key             = "&appid=7e529a7df215e65c222ec1f24c8fe80c"
-API_city            = "&q=Oslo"
+API_city            = "&q=Alicante,ES"
 API_units           = "&units=metric" 
 
 API                 = API_url + API_city + API_units + API_key
@@ -164,10 +170,10 @@ class CurrentWeather():
         else:
             self.its_day = False
         
-        
 
 VALID_CLOUD_RATE    = 30 #%
 VALID_RAIN_RATE     = 1
+
 
 # Buttons configuration
 BTN_ELEVATION       =   3
@@ -267,6 +273,7 @@ class WaterDrop():
     def drop_move():
         pass
 
+
 def print_sunny_day(screen, rect):
     # Changing the background of the weather API - Sunny day
     sun = pygame.image.load(SUN_ICON)
@@ -353,7 +360,83 @@ def print_rainy_night(screen, rect, rain):
             drop.end_pos.y = drop.start_pos.y + drop.length
 
 
+# Pantalla principal 
+class MainWindow():
+    def __init__(self):
+        self.window_number = 0
 
+        self.btn_settings    =   Button("Settings",BTN_SETTINGS_POS,BTN_SETTINGS_WIDTH, BTN_SETTINGS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_lights      =   Button("Lights", BTN_LIGHTS_POS, BTN_LIGHTS_WIDTH, BTN_LIGHTS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_tv          =   Button("TV", BTN_TV_POS, BTN_TV_WIDTH, BTN_TV_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_air         =   Button("Air", BTN_AIR_POS, BTN_AIR_WIDTH, BTN_AIR_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_appliance   =   Button("Appliance", BTN_APPLIANCE_POS, BTN_AIR_WIDTH, BTN_APPLIANCE_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_blinds      =   Button("Blinds", BTN_BLINDS_POS, BTN_BLINDS_WIDTH, BTN_BLINDS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.btn_weather     =   Button("Weather", BTN_WEATHER_POS, BTN_WEATHER_WIDTH,BTN_WEATHER_HEIGHT,1,pygame.font.Font(None,30), SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-    
+    def print_main_window(self, screen, functions):
+        self.btn_weather.draw(screen, functions[0])
+        self.btn_settings.draw(screen, functions[1])
+        self.btn_lights.draw(screen, functions[2])
+        self.btn_tv.draw(screen, functions[3])
+        self.btn_air.draw(screen, functions[4])
+        self.btn_appliance.draw(screen, functions[5])
+        self.btn_blinds.draw(screen, functions[6])
+
+    def do_weather_simulations(self, screen, cw, rain):
+        if cw.its_day:
+            if cw.rain_volume > VALID_RAIN_RATE:
+                print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
+            elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                print_cloudy_day(screen, self.btn_weather.get_Rect())
+            else:
+                print_sunny_day(screen, self.btn_weather.get_Rect())            
+        else: 
+            if cw.rain_volume > VALID_RAIN_RATE:
+                print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
+            elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                print_cloudy_day(screen, self.btn_weather.get_Rect())
+            else:
+                print_dark_night(screen, self.btn_weather.get_Rect())
+
+        offset = 15
+
+        location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
+        location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(location_text,location_rect)
+
+        temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
+        temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(temp_text,temp_rect)
         
+        description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
+        description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(description_text,description_rect)
+
+        text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
+        temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
+        temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
+        screen.blit(temp_minmax_text,temp_minmax_rect)
+        
+        # Let's just update the surface we are changing in order to save CPU time
+        pygame.display.update(self.btn_weather.get_Rect())
+           
+
+class LightsWindow():
+    def __init__(self):
+        pass
+
+class TVWindow():
+    def __init__(self):
+        pass
+
+class AirWindow():
+    def __init__(self):
+        pass
+
+class BlindWindow():
+    def __init__(self):
+        pass
+
+class ApplianceWindow():
+    def __init__(self):
+        pass
