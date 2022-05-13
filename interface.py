@@ -58,21 +58,21 @@ while DoIt:
         if event.type == pygame.QUIT : 
             DoIt = False
 
-    end = time.time()
+    
     # Handling the API through the time. It must have been X seconds since last call. 
     # X (the time in seconds) is determined by the TIMESTAMP variable
+    
+    end = time.time()
     if (end-start) >= TIMESTAMP:        
         # This calls the OpenWeather API and get the information that is required
         cw.get_weather_info()
-        #print(cw.info)
 
         # Let´s restart the timer so it does another call to the API in the selected timestamp
         start   = time.time()
         end     = start
         
-        
 
-    # Buttons 
+    # Main Buttons 
     screen.fill(HIPER_LIGHT_BLUE)
     btn_weather.draw(screen, btn_print)
     btn_settings.draw(screen, btn_print)
