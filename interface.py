@@ -17,6 +17,11 @@ pygame.display.set_icon(pygame.image.load(WINDOW_ICON))
 # ----------------------
 cw = CurrentWeather()   # This is the call for Current weather API
 
+# -------------------------------------
+# Initializing the items of the house |
+# -------------------------------------
+# This class will keep track of the state of each item on the house
+items = Items()
 
 # ---------------------------------
 # Creating the different windows  |
@@ -150,7 +155,6 @@ while DoIt:
         start   = time.time()
         end     = start
         
-
     # Checking which window we have to print, but first we fill the background with a default color
     screen.fill(HIPER_LIGHT_BLUE)
 
@@ -159,17 +163,17 @@ while DoIt:
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        light_window.print_lights_window(screen, lights_functions)
+        light_window.print_lights_window(screen, lights_functions, items)
     elif current_screen == 3:
-        tv_window.print_tv_window(screen, tv_functions)
+        tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
-        air_window.print_air_window(screen, air_functions)
+        air_window.print_air_window(screen, air_functions, items)
     elif current_screen == 5:
-        appliance_window.print_appliance_window(screen, appliance_functions)
+        appliance_window.print_appliance_window(screen, appliance_functions, items)
     elif current_screen == 6:
-        blind_window.print_blind_window(screen, blinds_functions)
+        blind_window.print_blind_window(screen, blinds_functions, items)
     elif current_screen == 7:
-        settings_window.print_settings_window(screen, settings_functions)
+        settings_window.print_settings_window(screen, settings_functions, items)
 
     pygame.display.flip()
 

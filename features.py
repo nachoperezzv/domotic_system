@@ -362,6 +362,17 @@ def print_rainy_night(screen, rect, rain):
             drop.start_pos.y = 2
             drop.end_pos.y = drop.start_pos.y + drop.length
 
+# This is the class that will save the state of each item connected in the house
+class Items():
+    def __init__(self):
+        self.led        = False
+        self.tv         = False
+        self.air        = 0
+        self.appliance  = False
+        self.blind      = 0
+    
+    def get_items_status(self):
+        pass
 
 # This is the class for the main window. It contais the buttons that fill the window and the functions that will print them. The simulation of the weather is also defined here. 
 class MainWindow():
@@ -434,7 +445,6 @@ class WeatherWindow():
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-        # Coment in the Between windows branch
     def print_weather_window(self, screen, functions):
         self.go_back_button.draw(screen, functions[0])
 
@@ -448,11 +458,25 @@ class LightsWindow():
         self.light_plan_img =   pygame.image.load(LIGHTS_WINDOW_BG)
         self.light_plan_rect=   self.light_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-        # Comment added in the main branch
-    def print_lights_window(self, screen, functions):
+    def print_lights_window(self, screen, functions, items):
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
-        
+
+        self.check_light_status(items)
+        self.do_lights_simulation(screen, items)
+
+    def check_light_status(self, items):
+        mx, my = pygame.mouse.get_pos()
+        if mx > 240 and mx < 260 and my > 225 and my < 245: 
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.led = not items.led
+
+    def do_lights_simulation(self,screen,items):
+        if items.led == True:
+            pygame.draw.circle(surface=screen, color = WHITE, center=(250, 235), radius = 5)
+            
+
 
 class TVWindow():
     def __init__(self):
@@ -463,7 +487,7 @@ class TVWindow():
         self.tv_plan_img    =   pygame.image.load(TV_WINDOW_BG)
         self.tv_plan_rect   =   self.tv_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_tv_window(self, screen, functions):
+    def print_tv_window(self, screen, functions, items):
         screen.blit(self.tv_plan_img, self.tv_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
@@ -477,7 +501,7 @@ class AirWindow():
         self.air_plan_img   = pygame.image.load(AIR_WINDOW_BG)
         self.air_plan_rect  = self.air_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_air_window(self, screen, functions): 
+    def print_air_window(self, screen, functions, items): 
         screen.blit(self.air_plan_img, self.air_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
@@ -491,7 +515,7 @@ class ApplianceWindow():
         self.aplliance_plan_img = pygame.image.load(APPLIANCE_WIN_BG)
         self.aplliance_plan_rect= self.aplliance_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_appliance_window(self, screen, functions):
+    def print_appliance_window(self, screen, functions, items):
         screen.blit(self.aplliance_plan_img, self.aplliance_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
@@ -505,7 +529,8 @@ class BlindWindow():
         self.blind_plan_img =   pygame.image.load(BLIND_WINDOW_BG)
         self.blind_plan_rect=   self.blind_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_blind_window(self, screen, functions):
+    def print_blind_window(self, screen, functions, items):
+        screen.blit(self.blind_plan_img, self.blind_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
 
@@ -514,5 +539,5 @@ class SettingsWindow():
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-    def print_settings_window(self, screen, functions):
+    def print_settings_window(self, screen, functions, items):
         self.go_back_button.draw(screen, functions[0])
