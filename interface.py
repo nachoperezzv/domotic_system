@@ -19,10 +19,13 @@ cw = CurrentWeather()   # This is the call for Current weather API
 
 
 # ---------------------------------
-# Creating the buttons and panels |
+# Creating the different windows  |
 # ---------------------------------
-
-# This variable is used to know en which 
+# This variable is used to know which window we should print
+# 0 = main window       # 1 = weather window    # 2 = lights window
+# 3 = Tv window         # 4 = air window        # 5 = apliance window
+# 6 = blinds window
+# Default window is main = 0
 current_screen = 0
 
 # Declaration of the object main_buttons from main_window class
@@ -40,40 +43,46 @@ tv_window = TVWindow()
 # Declaration of the object blind_buttons from blind_window class
 blind_window = BlindWindow()
 
-# btn_settings    =   Button("Settings",BTN_SETTINGS_POS,BTN_SETTINGS_WIDTH, BTN_SETTINGS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_lights      =   Button("Lights", BTN_LIGHTS_POS, BTN_LIGHTS_WIDTH, BTN_LIGHTS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_tv          =   Button("TV", BTN_TV_POS, BTN_TV_WIDTH, BTN_TV_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_air         =   Button("Air", BTN_AIR_POS, BTN_AIR_WIDTH, BTN_AIR_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_appliance   =   Button("Appliance", BTN_APPLIANCE_POS, BTN_AIR_WIDTH, BTN_APPLIANCE_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_blinds      =   Button("Blinds", BTN_BLINDS_POS, BTN_BLINDS_WIDTH, BTN_BLINDS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-# btn_weather     =   Button("Weather", BTN_WEATHER_POS, BTN_WEATHER_WIDTH,BTN_WEATHER_HEIGHT,1,pygame.font.Font(None,30), SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
+# -------------------------------
+# Creating the button functions |
+# -------------------------------
+# These functions will change the variable 'current_screen'. This one indicates which window we should print 
 
-# Functions for the buttons 
-def btn_print1():
-    pass
+def moving_to_weather_window():
+    global current_screen
+    current_screen = 1
 
-def btn_print2():
-    pass
+def moving_to_light_window():
+    global current_screen
+    current_screen = 2
 
-def btn_print3():
-    pass
+def moving_to_tv_window():
+    global current_screen
+    current_screen = 3
 
-def btn_print4():
-    pass
+def moving_to_air_window():
+    global current_screen
+    current_screen = 4
 
-def btn_print5():
-    pass
+def moving_to_appliance_window():
+    global current_screen
+    current_screen = 5
 
-def btn_print6():
-    pass
+def moving_to_blind_window():
+    global current_screen
+    current_screen = 6
 
-def btn_print7():
-    pass
+def moving_to_setting_window():
+    global current_screen
+    current_screen = 7
 
-functions = [btn_print1, btn_print2, btn_print3, btn_print4, btn_print5, btn_print6, btn_print7]
+# Let's just create a vector that contains all the functions just so it will be easier to call the function print of the main buttons
+functions = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window, moving_to_air_window, moving_to_appliance_window ,moving_to_blind_window, moving_to_setting_window]
 
-# Creating the rain - This is done just once
+# --------------------------
+# Creating the rain vector |
+# --------------------------
 rain = []
 for i in range(DROP_NUMBER):
     length = DROP_LEN[random.randrange(0,len(DROP_LEN))]
@@ -91,11 +100,17 @@ for i in range(DROP_NUMBER):
 
     rain.append(drop)
 
-# Setting inicial variables for time
+
+# ------------------------------------
+# Setting inicial variables for time |
+# ------------------------------------
 start   = time.time()
 end     = start
 
-# Infinite loop that controls the APP
+
+# -------------------------------------
+# Infinite loop that controls the APP |
+# -------------------------------------
 while DoIt:
 
     # Handling the events - Stop the app
@@ -116,70 +131,27 @@ while DoIt:
         end     = start
         
 
-    # Checking which window we have to print
-        # Draw Main Buttons
-        # Draw Light Buttons
-        # Draw TV Buttons
-        # Draw Appliance Buttons
-        # Draw Air Buttons
-        # Draw Appliance Buttons
+    # Checking which window we have to print, but first we fill the background with a default color
     screen.fill(HIPER_LIGHT_BLUE)
-    main_window.print_main_window(screen, functions)
-    # btn_weather.draw(screen, btn_print)
-    # btn_settings.draw(screen, btn_print)
-    # btn_lights.draw(screen, btn_configure_lights)
-    # btn_tv.draw(screen, btn_print)
-    # btn_air.draw(screen, btn_print)
-    # btn_appliance.draw(screen, btn_print)
-    # btn_blinds.draw(screen, btn_print)
 
-    # What is the weather like ? - Simulation
-    mx,my = pygame.mouse.get_pos()
-    if (mx>2 and mx<WEATHER_WINDOW_WIDTH and my>2 and my<WEATHER_WINDOW_HEIGHT - 2) :
-        
-        main_window.do_weather_simulations(screen, cw, rain)
+    if current_screen == 0:
+        main_window.print_main_window(screen, functions, cw, rain)
+    elif current_screen == 1:pass
+        # Draw Weather Window
+    elif current_screen == 2:pass
+        # Draw Light Window
+    elif current_screen == 3:pass
+        # Draw TV Window
+    elif current_screen == 4:pass
+        # Draw Air Window
+    elif current_screen == 5:pass
+        # Draw Appliance Window
+    elif current_screen == 6:pass
+        # Draw Blind Window
+    elif current_screen == 7:pass
+        # Draw Setting Window
 
-        # Checking if it's day/night, cloudy or rainy
-        # if cw.its_day:
-        #     if cw.rain_volume > VALID_RAIN_RATE:
-        #         print_rainy_day(screen, btn_weather.get_Rect(), rain)
-        #     elif cw.cloud_percent > VALID_CLOUD_RATE: 
-        #         print_cloudy_day(screen, btn_weather.get_Rect())
-        #     else:
-        #         print_sunny_day(screen, btn_weather.get_Rect())            
-        # else: 
-        #     if cw.rain_volume > VALID_RAIN_RATE:
-        #         print_rainy_day(screen, btn_weather.get_Rect(), rain)
-        #     elif cw.cloud_percent > VALID_CLOUD_RATE: 
-        #         print_cloudy_day(screen, btn_weather.get_Rect())
-        #     else:
-        #         print_dark_night(screen, btn_weather.get_Rect())
-            
-        # Adding to the Weather App some widgets
-        # offset = 15
-
-        # location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
-        # location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
-        # screen.blit(location_text,location_rect)
-
-        # temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
-        # temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
-        # screen.blit(temp_text,temp_rect)
-        
-        # description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
-        # description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
-        # screen.blit(description_text,description_rect)
-
-        # text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
-        # temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
-        # temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
-        # screen.blit(temp_minmax_text,temp_minmax_rect)
-        # # Let's just update the surface we are changing in order to save CPU time
-        # pygame.display.update(btn_weather.get_Rect())
-    
-    else:
-        # If none of the buttons have been pressed then we update the whole screen
-        pygame.display.flip()
+    pygame.display.flip()
 
     
 

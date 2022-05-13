@@ -62,7 +62,7 @@ DROP_VERY_SLOW      =   1
 DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
 
 # Time Variables
-TIMESTAMP           =   3 #secs
+TIMESTAMP           =   90 #secs
 
 # API Variables 
 API_url             = "https://api.openweathermap.org/data/2.5/weather?"
@@ -360,8 +360,9 @@ def print_rainy_night(screen, rect, rain):
             drop.end_pos.y = drop.start_pos.y + drop.length
 
 
-# Pantalla principal 
+# This is the class for the main window. It contais the buttons that fill the window and the functions that will print them. The simulation of the weather is also defined here. 
 class MainWindow():
+
     def __init__(self):
         self.window_number = 0
 
@@ -373,49 +374,54 @@ class MainWindow():
         self.btn_blinds      =   Button("Blinds", BTN_BLINDS_POS, BTN_BLINDS_WIDTH, BTN_BLINDS_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
         self.btn_weather     =   Button("Weather", BTN_WEATHER_POS, BTN_WEATHER_WIDTH,BTN_WEATHER_HEIGHT,1,pygame.font.Font(None,30), SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-    def print_main_window(self, screen, functions):
+    def print_main_window(self, screen, functions, cw, rain):
         self.btn_weather.draw(screen, functions[0])
-        self.btn_settings.draw(screen, functions[1])
-        self.btn_lights.draw(screen, functions[2])
-        self.btn_tv.draw(screen, functions[3])
-        self.btn_air.draw(screen, functions[4])
-        self.btn_appliance.draw(screen, functions[5])
-        self.btn_blinds.draw(screen, functions[6])
+        self.btn_lights.draw(screen, functions[1])
+        self.btn_tv.draw(screen, functions[2])
+        self.btn_air.draw(screen, functions[3])
+        self.btn_appliance.draw(screen, functions[4])
+        self.btn_blinds.draw(screen, functions[5])
+        self.btn_settings.draw(screen, functions[6])
+
+        self.do_weather_simulations(screen, cw, rain)
+
 
     def do_weather_simulations(self, screen, cw, rain):
-        if cw.its_day:
-            if cw.rain_volume > VALID_RAIN_RATE:
-                print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
-            elif cw.cloud_percent > VALID_CLOUD_RATE: 
-                print_cloudy_day(screen, self.btn_weather.get_Rect())
-            else:
-                print_sunny_day(screen, self.btn_weather.get_Rect())            
-        else: 
-            if cw.rain_volume > VALID_RAIN_RATE:
-                print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
-            elif cw.cloud_percent > VALID_CLOUD_RATE: 
-                print_cloudy_day(screen, self.btn_weather.get_Rect())
-            else:
-                print_dark_night(screen, self.btn_weather.get_Rect())
+        mx,my = pygame.mouse.get_pos()
+        if (mx>2 and mx<WEATHER_WINDOW_WIDTH and my>2 and my<WEATHER_WINDOW_HEIGHT - 2) :
+            if cw.its_day:
+                if cw.rain_volume > VALID_RAIN_RATE:
+                    print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
+                elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                    print_cloudy_day(screen, self.btn_weather.get_Rect())
+                else:
+                    print_sunny_day(screen, self.btn_weather.get_Rect())            
+            else: 
+                if cw.rain_volume > VALID_RAIN_RATE:
+                    print_rainy_day(screen, self.btn_weather.get_Rect(), rain)
+                elif cw.cloud_percent > VALID_CLOUD_RATE: 
+                    print_cloudy_day(screen, self.btn_weather.get_Rect())
+                else:
+                    print_dark_night(screen, self.btn_weather.get_Rect())
 
-        offset = 15
+            offset = 15
 
-        location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
-        location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
-        screen.blit(location_text,location_rect)
+            location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
+            location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
+            screen.blit(location_text,location_rect)
 
-        temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
-        temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
-        screen.blit(temp_text,temp_rect)
-        
-        description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
-        description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
-        screen.blit(description_text,description_rect)
+            temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
+            temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
+            screen.blit(temp_text,temp_rect)
+            
+            description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
+            description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
+            screen.blit(description_text,description_rect)
 
-        text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
-        temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
-        temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
-        screen.blit(temp_minmax_text,temp_minmax_rect)
+            text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
+            temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
+            temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
+            screen.blit(temp_minmax_text,temp_minmax_rect)
         
         # Let's just update the surface we are changing in order to save CPU time
         pygame.display.update(self.btn_weather.get_Rect())
