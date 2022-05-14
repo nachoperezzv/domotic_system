@@ -1,3 +1,4 @@
+from turtle import left
 import pygame, os, random, json
 import urllib.error, urllib.request 
 
@@ -463,6 +464,7 @@ class LightsWindow():
         self.go_back_button.draw(screen, functions[0])
 
         self.check_light_status(items)
+        self.print_indicator(screen, items)
         self.do_lights_simulation(screen, items)
 
     def check_light_status(self, items):
@@ -471,10 +473,21 @@ class LightsWindow():
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     items.led = not items.led
+    
+    def print_indicator(self,screen, items):
+        if items.led == True:
+            tv_text = pygame.font.Font(None,20).render("LED On", True, [50,250, 50])
+            tv_rect = tv_text.get_rect(left=230, top=210)
+        else:
+            tv_text = pygame.font.Font(None,20).render("LED Off", True, [250, 50, 50])
+            tv_rect = tv_text.get_rect(left=230, top=210)
+        
+        screen.blit(tv_text, tv_rect)
+        
 
     def do_lights_simulation(self,screen,items):
         if items.led == True:
-            pygame.draw.circle(surface=screen, color = WHITE, center=(250, 235), radius = 5)
+            pygame.draw.circle(surface=screen, color = pygame.Color(255,255,0), center=(250, 235), radius = 8)
             
 
 
