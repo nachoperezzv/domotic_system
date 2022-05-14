@@ -1,3 +1,4 @@
+from turtle import left
 import pygame, os, random, json
 import urllib.error, urllib.request 
 
@@ -364,12 +365,16 @@ def print_rainy_night(screen, rect, rain):
 
 # This is the class that will save the state of each item connected in the house
 class Items():
+
+    # Default temperature
+    default_temperature = 21
+
     def __init__(self):
         self.led        = False
         self.tv         = False
-        self.air        = 0
+        self.air        = [0,False] # First value is to check temperature the air is working at, second if it's on or off
         self.appliance  = False
-        self.blind      = 0
+        self.blind      = [0,False] # First value is to check the height the blinds are at, second is to known it's 
     
     def get_items_status(self):
         pass
@@ -505,6 +510,42 @@ class AirWindow():
         screen.blit(self.air_plan_img, self.air_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
+        self.check_air_status(items)
+        self.print_air_indicator(screen, items)
+        self.do_air_simulation(screen, items)
+
+    def check_air_status(self, items):
+        mx, my = pygame.mouse.get_pos()
+        if mx > 130 and mx < 165 and my > 390 and my < 430:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.air[1] = not items.air[1]
+    
+    def print_air_indicator(self,screen, items):
+        if items.air[1] == True:
+            air_text = pygame.font.Font(None, 20).render("Air On", True, [50,250,50])
+            air_rect = air_text.get_rect(left=130, top=380)
+        else:
+            air_text = pygame.font.Font(None, 20).render("Air Off", True, [250,50,50])
+            air_rect = air_text.get_rect(left=130, top=380)
+
+        screen.blit(air_text, air_rect)
+
+    def do_air_simulation(self,screen, items):
+        # if items.air[1] == True:                                        # Air on
+        #     if items.air[0] < items.default_temperature:                # Cold air
+        #         pygame.draw.circle(screen, [50,50,250], (400,140), 8)
+        #         print("frio")
+        #     if items.air[0] > items.default_temperature:                # Heat air
+        #         pygame.draw.circle(screen, [250,50,50], (400,156), 8)
+        #         print("caliente")
+        #     else:                                                       # If the default temperature is equal to the temperature selected
+        #         print("frio,caliente")
+        #         pygame.draw.circle(screen, [50,50,250], (400,140), 8)
+        #         pygame.draw.circle(screen, [250,50,50], (400,156), 8)
+        # else:                                                           # Air off
+        #     pass
+        pass
 
 class ApplianceWindow():
     def __init__(self):

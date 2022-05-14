@@ -158,6 +158,8 @@ while DoIt:
     # Checking which window we have to print, but first we fill the background with a default color
     screen.fill(HIPER_LIGHT_BLUE)
 
+    # print(pygame.mouse.get_pos())
+
     if current_screen == 0:
         main_window.print_main_window(screen, main_functions, cw, rain)
     elif current_screen == 1:
