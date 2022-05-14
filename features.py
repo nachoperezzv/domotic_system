@@ -594,6 +594,31 @@ class ApplianceWindow():
         screen.blit(self.aplliance_plan_img, self.aplliance_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
+        self.check_appliance_status(items)
+        self.print_appliance_indicator(screen, items)
+        self.do_appliance_simulation(screen, items)
+
+    def check_appliance_status(self, items):
+        mx, my = pygame.mouse.get_pos()
+        if mx > 165 and mx < 275 and my > 350 and my < 420: 
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.appliance = not items.appliance
+
+    def print_appliance_indicator(self,screen,items):
+        if items.appliance == True:
+            appliance_text = pygame.font.Font(None,20).render("Washing Machine On", True, [50,250,50])
+            appliance_rect = appliance_text.get_rect(left=160, top=340)
+        else:
+            appliance_text = pygame.font.Font(None,20).render("Washing Machine Off", True, [250,50,50])
+            appliance_rect = appliance_text.get_rect(left=160, top=340)
+        screen.blit(appliance_text, appliance_rect)
+
+    def do_appliance_simulation(self,screen, items):
+        if items.appliance == True:
+            # pygame.draw.rect(screen, [200,200,200], pygame.Rect(190,360,70,50))
+            pass
+
 
 class BlindWindow():
     def __init__(self):
