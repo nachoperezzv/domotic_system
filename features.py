@@ -519,6 +519,23 @@ class ApplianceWindow():
         screen.blit(self.aplliance_plan_img, self.aplliance_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
+        self.check_appliance_status(items)
+        self.print_appliance_status(screen, items)
+        self.do_appliance_simulation(screen, items)
+
+    def check_appliance_status(self, items):
+        mx, my = pygame.mouse.get_pos()
+        if mx > 165 and mx < 275 and my > 350 and my < 420: 
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.appliance = not items.appliance
+
+    def print_appliance_status(self,screen,items):
+        pass
+
+    def do_appliance_simulation(self,screen, items):
+        pass
+
 
 class BlindWindow():
     def __init__(self):
