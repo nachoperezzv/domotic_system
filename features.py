@@ -364,12 +364,15 @@ def print_rainy_night(screen, rect, rain):
 
 # This is the class that will save the state of each item connected in the house
 class Items():
+
+    blind_top = 15
+
     def __init__(self):
         self.led        = False
         self.tv         = False
         self.air        = 0
         self.appliance  = False
-        self.blind      = 0
+        self.blind      = [0,False]
     
     def get_items_status(self):
         pass
@@ -532,6 +535,36 @@ class BlindWindow():
     def print_blind_window(self, screen, functions, items):
         screen.blit(self.blind_plan_img, self.blind_plan_rect)
         self.go_back_button.draw(screen, functions[0])
+
+        self.check_blind_status(items)
+        self.print_blind_indicator(screen,items)
+        self.do_blind_simulation(screen,items)
+
+    def check_blind_status(self,items):
+        mx, my = pygame.mouse.get_pos()
+        if mx > 25 and mx < 50 and my > 15 and my < 160: 
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.blind[1] = not items.blind[1]
+
+    def print_blind_indicator(self,screen,items):
+        if items.blind[1] == True:                  # Blinds On
+            if items.blind[0] < items.blind_top:
+                blind_text = pygame.font.Font(None,20).render("Blind Going up",True, [50,250,50],)
+                blind_rect = blind_text.get_rect(left=35, top=25)
+            elif items.blind[1] > items.blind_top:
+                blind_text = pygame.font.Font(None,20).render("Blind Going down",True, [50,250,50],)
+                blind_rect = blind_text.get_rect(left=35, top=25)
+        else:
+            blind_text = pygame.font.Font(None,20).render("Blind Going Off",True, [250,50,50],)
+            blind_rect = blind_text.get_rect(left=35, top=25)
+
+        screen.blit(blind_text,blind_rect)
+
+    def do_blind_simulation(self,screen,items):
+        if items.blind[1] == True:
+            pass
+
 
 
 class SettingsWindow():
