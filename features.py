@@ -372,7 +372,7 @@ class Items():
     def __init__(self):
         self.led        = False
         self.tv         = False
-        self.air        = [0,False] # First value is to check temperature the air is working at, second if it's on or off
+        self.air        = [21,False] # First value is to check temperature the air is working at, second if it's on or off
         self.appliance  = False
         self.blind      = [0,False] # First value is to check the height the blinds are at, second is to known it's 
     
@@ -532,20 +532,18 @@ class AirWindow():
         screen.blit(air_text, air_rect)
 
     def do_air_simulation(self,screen, items):
-        # if items.air[1] == True:                                        # Air on
-        #     if items.air[0] < items.default_temperature:                # Cold air
-        #         pygame.draw.circle(screen, [50,50,250], (400,140), 8)
-        #         print("frio")
-        #     if items.air[0] > items.default_temperature:                # Heat air
-        #         pygame.draw.circle(screen, [250,50,50], (400,156), 8)
-        #         print("caliente")
-        #     else:                                                       # If the default temperature is equal to the temperature selected
-        #         print("frio,caliente")
-        #         pygame.draw.circle(screen, [50,50,250], (400,140), 8)
-        #         pygame.draw.circle(screen, [250,50,50], (400,156), 8)
-        # else:                                                           # Air off
-        #     pass
-        pass
+        if items.air[1] == True:                                        # Air on
+            if items.air[0] < items.default_temperature:                # Cold air
+                pygame.draw.circle(surface=screen, color=[50,50,250], center=(140,400), radius=8)
+                print("frio")
+            elif items.air[0] > items.default_temperature:                # Heat air
+                pygame.draw.circle(screen, [250,50,50], (156,400), 8)
+                print("caliente")
+            else:                                                       # If the default temperature is equal to the temperature selected
+                print("frio,caliente")
+                pygame.draw.circle(screen, [50,50,250], (140,400), 8)
+                pygame.draw.circle(screen, [250,50,50], (156,400), 8)
+        
 
 class ApplianceWindow():
     def __init__(self):
