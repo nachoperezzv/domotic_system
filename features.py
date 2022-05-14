@@ -440,6 +440,9 @@ class MainWindow():
 
 
 
+#### TO DO: Complete the Lights window and fill the rest 
+
+
 class WeatherWindow():
     def __init__(self):
         # Button for going back to main window
@@ -477,7 +480,6 @@ class LightsWindow():
             pygame.draw.circle(surface=screen, color = WHITE, center=(250, 235), radius = 5)
             
 
-
 class TVWindow():
     def __init__(self):
         # Button for going back to main window
@@ -490,6 +492,20 @@ class TVWindow():
     def print_tv_window(self, screen, functions, items):
         screen.blit(self.tv_plan_img, self.tv_plan_rect)
         self.go_back_button.draw(screen, functions[0])
+
+        self.check_tv_status(items)
+        self.do_tv_simulation(screen, items)
+    
+    def check_tv_status(self, items):
+        mx, my = pygame.mouse.get_pos()
+        if mx >35 and mx < 85 and my > 270 and my < 400:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    items.tv = not items.tv
+    
+    def do_tv_simulation(self,screen, items):
+        if items.tv == True:
+            pygame.draw.rect(surface=screen, color=LIGHT_BLUE, rect=(45,285,25,110),width=0)
 
 
 class AirWindow():
