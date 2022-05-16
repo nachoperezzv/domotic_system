@@ -27,5 +27,5 @@ void ESP8266_SetUp()
   WiFi.begin(SSID, PASS);
 
   while(WiFi.status() != WL_CONNECTED){ delay(50); /*Waiting for connection*/ }
-  Serial.println("Connected");
+  Serial.println("Connected to the WiFi");
 }

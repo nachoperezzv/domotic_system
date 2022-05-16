@@ -1,6 +1,8 @@
 import pygame, os, random, json
 import urllib.error, urllib.request 
-import socket 
+import socket
+
+from sklearn.covariance import ledoit_wolf 
 
 from tramas import *
 from datetime import datetime
@@ -373,49 +375,56 @@ class Items():
     blind_top = 15
 
     def __init__(self):
-        self.led        = 0
+        self.led        = False
         self.tv         = False
         self.air        = [21,False] # First value is to check temperature the air is working at, second if it's on or off
         self.appliance  = False
         self.blind      = [0,False] # First value is to check the height the blinds are at, second is to known it's 
-        
-    def get_item_status(self,tcpip, trama):
-        tcpip.send_data(trama)
-        return int(tcpip.read_line())
-        #print("Data received: ", type(item), item)
 
-    def set_item_status(self,tcpip, trama):
-        tcpip.send_data(trama)
+    def get_trama(self):
+        t = str(self.led)+str(self.tv) + str(self.air[1]) + str(self.appliance) + str(self.blind[1])
+        return t  
+    # def get_item_status(self,tcpip, trama):
+    #     tcpip.send_data(trama)
+    #     return int(tcpip.read_line())
+    #     #print("Data received: ", type(item), item)
+
+    # def set_item_status(self,tcpip, trama):
+    #     tcpip.send_data(trama)
 
 # TCP/IP Connection
 IP                  = '192.168.100.2'
 PORT                = 8888
 
-class TCPIPconnection():
-    def __init__(self):
-        # TCP/IP socket declaration
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# class TCPIPconnection():
+#     def __init__(self):
+#         # TCP/IP socket declaration
+#         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#         self.connect(IP,PORT)
+#         self.check_connection()
         
-        
-    def connect(self, ip, port):
-        # Connecting to server
-        self.server_address = (ip, port)
-        print('connecting to {} port {}'.format(*self.server_address))
-        self.sock.connect(self.server_address)
+#     def connect(self, ip, port):
+#         # Connecting to server
+#         self.server_address = (ip, port)
+#         print('connecting to {} port {}'.format(*self.server_address))
+#         self.sock.connect(self.server_address)
 
-    def read_line(self):
-        # Reading data until newline
-        return self.sock.recv(8).decode('utf-8')        
+#     def check_connection(self):
+#         # Sending a message to the ESP8266 and printing the response.
+#         # This should be a string: 'Connected'
+#         self.sock.send("connecting".encode('ascii'))
+#         msg = self.sock.recv(1024)
+#         print(msg.decode('ascii'))
 
-    def send_data(self, data):
-        # Sending data to server
-        # s = bytes(data,'ascii')
-        self.sock.send(bytes(data,'ascii'))
+#     def read_line(self):
+#         # Reading data until newline
+#         return self.sock.recv(8).decode('utf-8')        
 
-    def refresh_lights_data(self):
-        self.send_data("12")
-        data = self.read_line()
-        return data    
+#     def send_data(self, data):
+#         # Sending data to server
+#         # s = bytes(data,'ascii')
+#         self.sock.send(bytes(data,'ascii'))
+ 
 
 # This is the class for the main window. It contais the buttons that fill the window and the functions that will print them. The simulation of the weather is also defined here. 
 class MainWindow():
@@ -500,25 +509,17 @@ class LightsWindow():
         self.light_plan_img =   pygame.image.load(LIGHTS_WINDOW_BG)
         self.light_plan_rect=   self.light_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_lights_window(self, screen, functions, items, tcpip):
+    def print_lights_window(self, screen, functions, items, trama):
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        # Checking the status of the led in the Arduino. If the user has change the state of the led
-        # through the buttons this functions will tell us. If nothing has change, items.led will have
-        # the same exact value
-        items.led = items.get_item_status(tcpip, TRAMAS['LED_READ'])
-        # Checking the status of the led on the interface. If the user touch the led in the screen it
-        # will update it's value
-        self.check_light_status(items)
-        # Checking done. We send the info back to the Arduino so it has control over the interface situation
-        items.set_item_status(tcpip, TRAMAS['LED_WRITE'] + str(items.led))
-
-        # Once the value has been changed (or not), we do the simulation with the updated value
+        self.check_light_status(items, trama)
         self.print_indicator(screen, items)
         self.do_lights_simulation(screen, items)
 
-    def check_light_status(self, items):
+        return items.get_trama()
+
+    def check_light_status(self, items, trama):
         mx, my = pygame.mouse.get_pos()
         if mx > 240 and mx < 260 and my > 225 and my < 245: 
             for event in pygame.event.get():
@@ -527,7 +528,11 @@ class LightsWindow():
                         items.led = 0
                     elif items.led == 0:
                         items.led = 1
-                    # items.led = not items.led
+                    
+                    trama[0] = items.led
+                    return trama
+        else:
+            return 00
     
     def print_indicator(self,screen, items):
         if items.led == 1:

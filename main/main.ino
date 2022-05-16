@@ -7,17 +7,14 @@
 // Global variables
 WiFiServer server(port);
 String msg;
+char trama[] = {'1','1','1','1','1'};
 
 void setup() {
   Serial_SetUp();  
   ESP8266_SetUp();
   server.begin();
 
-  led = '0';
-  tv = '0';
-  air = '0';
-  appliance = '0';
-  blind = '0';
+//  trama = ['1','1','1','1','1'];
 }
 
 void loop() {
@@ -39,22 +36,35 @@ void loop() {
       {
         for(int i=0;i<c;i++)
         {
-          Serial.print(i);
+//          Serial.print(i);
           char r = client.read();
-          Serial.print(" ");
-          Serial.print(r);
-          Serial.print(" ");
+//          Serial.print(" ");
+//          Serial.print(r);
+//          Serial.print(" ");
           // client.read() reads the next byte received from the server the client is 
           // connected to. Returns -1 if none is available
           if(r!=-1)
           {
             msg.concat(r);
-            Serial.println(msg);
+//            Serial.println(msg);
           }
         }
-        
+
+        // Initial message Connecting
+        if(msg=="connecting")
+        {
+          client.write("connected");  
+          Serial.println("Connected to the interface");
+        }
+
+        // If the interfaces it's only asking for info and don't want to make changes
+        else if(msg == "0")
+        {
+          client.write(trama);  
+        }
+                
         // LED TRAMA
-        if(msg.startsWith("10")) // Trama for LED_WRITE
+        else if(msg.startsWith("10")) // Trama for LED_WRITE
         {
           // Interface is writing and changing the status of the LED
           if(msg=="100")        // LED is Off

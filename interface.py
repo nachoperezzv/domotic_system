@@ -1,5 +1,8 @@
+from turtle import update
 from features import *
 from tramas import *
+from _thread import *
+from threading import Thread
 
 import pygame, sys, time
 
@@ -27,8 +30,58 @@ items = Items()
 # Initializing the tcp/ip of the house |
 # --------------------------------------
 # Creates the tcp/ip connection object
+trama = 0
+data = ""
+
+class TCPIPconnection():
+    def __init__(self):
+        # TCP/IP socket declaration
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(IP,PORT)
+        self.check_connection()
+        
+    def connect(self, ip, port):
+        # Connecting to server
+        self.server_address = (ip, port)
+        print('connecting to {} port {}'.format(*self.server_address))
+        self.sock.connect(self.server_address)
+
+    def check_connection(self):
+        # Sending a message to the ESP8266 and printing the response.
+        # This should be a string: 'Connected'
+        self.sock.send("connecting".encode('ascii'))
+        msg = self.sock.recv(1024)
+        print(msg.decode('ascii'))
+
+    def communicate(self):
+        global items, trama, data
+        self.sock.send(str(trama).encode('ascii'))
+        data = self.to_list(self.sock.recv(1024).decode('ascii'))
+        
+        self.updateItems()
+
+        print(type(data), data)
+    
+    def to_list(self,string):
+        list1=[]
+        list1[:0]=string
+        return list1
+    
+    def updateItems(self):
+        global items
+        items.led = bool(data[0])
+        items.tv = bool(data[1])
+        items.air[1] = bool(data[2])
+        items.appliance = bool(data[3])
+        items.blind[1] = bool(data[4])
+
+    def close(self):
+        self.sock.close()
+
+ 
+# tcpip = TCPIPconnection()
+# tcpip.connect(IP,PORT)
 tcpip = TCPIPconnection()
-tcpip.connect(IP,PORT)
 
 
 # ---------------------------------
@@ -145,6 +198,9 @@ end     = start
 # Infinite loop that controls the APP |
 # -------------------------------------
 while DoIt:
+    t = Thread(target=tcpip.communicate(), )
+    t.setDaemon = True
+    t.start()
 
     # Handling the events - Stop the app
     for event in pygame.event.get():
@@ -168,12 +224,14 @@ while DoIt:
 
     # print(pygame.mouse.get_pos())
 
+    t.join()
+
     if current_screen == 0:
         main_window.print_main_window(screen, main_functions, cw, rain)
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        light_window.print_lights_window(screen, lights_functions, items, tcpip)
+        trama = light_window.print_lights_window(screen, lights_functions, items, trama)
     elif current_screen == 3:
         tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
@@ -187,7 +245,8 @@ while DoIt:
 
     pygame.display.flip()
 
-    
+# Closing the socket
+tcpip.close()
 
 # Closing the app
 pygame.quit()
