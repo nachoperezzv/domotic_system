@@ -375,14 +375,14 @@ class Items():
     blind_top = 15
 
     def __init__(self):
-        self.led        = False
-        self.tv         = False
-        self.air        = [21,False] # First value is to check temperature the air is working at, second if it's on or off
-        self.appliance  = False
-        self.blind      = [0,False] # First value is to check the height the blinds are at, second is to known it's 
+        self.led        = 0
+        self.tv         = 0
+        self.air        = [21,0] # First value is to check temperature the air is working at, second if it's on or off
+        self.appliance  = 0
+        self.blind      = [0,0] # First value is to check the height the blinds are at, second is to known it's 
 
     def get_trama(self):
-        t = str(self.led)+str(self.tv) + str(self.air[1]) + str(self.appliance) + str(self.blind[1])
+        t = str(self.led)+str(self.tv)+str(self.air[1])+str(self.appliance)+str(self.blind[1])
         return t  
     # def get_item_status(self,tcpip, trama):
     #     tcpip.send_data(trama)
@@ -517,7 +517,7 @@ class LightsWindow():
         self.print_indicator(screen, items)
         self.do_lights_simulation(screen, items)
 
-        return items.get_trama()
+        # return items.get_trama()
 
     def check_light_status(self, items, trama):
         mx, my = pygame.mouse.get_pos()
@@ -529,10 +529,11 @@ class LightsWindow():
                     elif items.led == 0:
                         items.led = 1
                     
-                    trama[0] = items.led
-                    return trama
+                    trama[0] = str(items.led)
+                    # return trama
         else:
-            return 00
+            # return str(00)
+            trama = str(0)
     
     def print_indicator(self,screen, items):
         if items.led == 1:

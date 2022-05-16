@@ -30,7 +30,7 @@ items = Items()
 # Initializing the tcp/ip of the house |
 # --------------------------------------
 # Creates the tcp/ip connection object
-trama = 0
+trama = items.get_trama()
 data = ""
 
 class TCPIPconnection():
@@ -60,7 +60,7 @@ class TCPIPconnection():
         
         self.updateItems()
 
-        print(type(data), data)
+        print(type(data), type(data[0]), data)
     
     def to_list(self,string):
         list1=[]
@@ -231,7 +231,8 @@ while DoIt:
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        trama = light_window.print_lights_window(screen, lights_functions, items, trama)
+        light_window.print_lights_window(screen, lights_functions, items, trama)
+        # print(type(tr),tr)
     elif current_screen == 3:
         tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
