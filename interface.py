@@ -1,5 +1,5 @@
-from pip import main
 from features import *
+from tramas import *
 
 import pygame, sys, time
 
@@ -22,6 +22,14 @@ cw = CurrentWeather()   # This is the call for Current weather API
 # -------------------------------------
 # This class will keep track of the state of each item on the house
 items = Items()
+
+# --------------------------------------
+# Initializing the tcp/ip of the house |
+# --------------------------------------
+# Creates the tcp/ip connection object
+tcpip = TCPIPconnection()
+tcpip.connect(IP,PORT)
+
 
 # ---------------------------------
 # Creating the different windows  |
@@ -165,7 +173,7 @@ while DoIt:
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        light_window.print_lights_window(screen, lights_functions, items)
+        light_window.print_lights_window(screen, lights_functions, items, tcpip)
     elif current_screen == 3:
         tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
