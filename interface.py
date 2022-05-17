@@ -30,7 +30,7 @@ items = Items()
 # Initializing the tcp/ip of the house |
 # --------------------------------------
 # Creates the tcp/ip connection object
-trama = items.get_trama()
+trama = "0"
 data = ""
 
 class TCPIPconnection():
@@ -59,8 +59,11 @@ class TCPIPconnection():
         data = self.to_list(self.sock.recv(1024).decode('ascii'))
         
         self.updateItems()
-
-        print(type(data), type(data[0]), data)
+        
+        print("--------")
+        print("trama: ", type(str(trama)), trama)
+        print("data: ", type(data), type(data[0]), data)
+        print("items: ", items.led, items.tv, items.air[1],items.appliance, items.blind[1])
     
     def to_list(self,string):
         list1=[]
@@ -68,12 +71,12 @@ class TCPIPconnection():
         return list1
     
     def updateItems(self):
-        global items
-        items.led = bool(data[0])
-        items.tv = bool(data[1])
-        items.air[1] = bool(data[2])
-        items.appliance = bool(data[3])
-        items.blind[1] = bool(data[4])
+        global items, data
+        items.led = int(data[0])
+        items.tv = int(data[1])
+        items.air[1] = int(data[2])
+        items.appliance = int(data[3])
+        items.blind[1] = int(data[4])
 
     def close(self):
         self.sock.close()
@@ -224,15 +227,15 @@ while DoIt:
 
     # print(pygame.mouse.get_pos())
 
-    t.join()
+    # t.join()
 
     if current_screen == 0:
         main_window.print_main_window(screen, main_functions, cw, rain)
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        light_window.print_lights_window(screen, lights_functions, items, trama)
-        # print(type(tr),tr)
+        trama = light_window.print_lights_window(screen, lights_functions, items, trama)
+        print(trama)
     elif current_screen == 3:
         tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
@@ -243,7 +246,7 @@ while DoIt:
         blind_window.print_blind_window(screen, blinds_functions, items)
     elif current_screen == 7:
         settings_window.print_settings_window(screen, settings_functions, items)
-
+    
     pygame.display.flip()
 
 # Closing the socket

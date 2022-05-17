@@ -382,7 +382,7 @@ class Items():
         self.blind      = [0,0] # First value is to check the height the blinds are at, second is to known it's 
 
     def get_trama(self):
-        t = str(self.led)+str(self.tv)+str(self.air[1])+str(self.appliance)+str(self.blind[1])
+        t = str(int(self.led))+str(int(self.tv))+str(int(self.air[1]))+str(int(self.appliance))+str(int(self.blind[1]))
         return t  
     # def get_item_status(self,tcpip, trama):
     #     tcpip.send_data(trama)
@@ -513,11 +513,11 @@ class LightsWindow():
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        self.check_light_status(items, trama)
+        tr = self.check_light_status(items, trama)
         self.print_indicator(screen, items)
         self.do_lights_simulation(screen, items)
 
-        # return items.get_trama()
+        return tr
 
     def check_light_status(self, items, trama):
         mx, my = pygame.mouse.get_pos()
@@ -529,11 +529,13 @@ class LightsWindow():
                     elif items.led == 0:
                         items.led = 1
                     
-                    trama[0] = str(items.led)
+                    tr = str(1) + items.get_trama()
+                    print(type(tr), tr)
+                    return tr
                     # return trama
         else:
-            # return str(00)
-            trama = str(0)
+            tr = str(0)
+            return tr
     
     def print_indicator(self,screen, items):
         if items.led == 1:
@@ -547,7 +549,7 @@ class LightsWindow():
         
 
     def do_lights_simulation(self,screen,items):
-        if items.led == True:
+        if items.led == 1:
             pygame.draw.circle(surface=screen, color = pygame.Color(255,255,0), center=(250, 235), radius = 8)
             
 

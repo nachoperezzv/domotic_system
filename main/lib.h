@@ -8,11 +8,11 @@ const char  *SSID = "Nacho_cabezon";
 const char  *PASS = "123456789";
 
 // Variables for the connections
-  char led;
-  char tv;
-  char air;
-  char appliance;
-  char blind;
+String led = "1";
+String tv = "1";
+String air = "1";
+String appliance = "1";
+String blind = "1";
 // Setting up the Serial Port
 void Serial_SetUp()
 {
@@ -28,4 +28,10 @@ void ESP8266_SetUp()
 
   while(WiFi.status() != WL_CONNECTED){ delay(50); /*Waiting for connection*/ }
   Serial.println("Connected to the WiFi");
+}
+
+String get_trama()
+{
+  String str = led + tv + air + appliance + blind;
+  return str;
 }
