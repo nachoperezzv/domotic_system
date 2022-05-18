@@ -124,7 +124,7 @@ appliance_window = ApplianceWindow()
 blind_window = BlindWindow()
 
 # Declaration of the object settings_window from SettingsWindow class - this will contain the settings buttons
-settings_window = SettingsWindow()
+settings_window = SettingsWindow(screen)
 
 
 # -------------------------------

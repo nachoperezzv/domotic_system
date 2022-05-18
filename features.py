@@ -1,18 +1,23 @@
 
-import pygame, random, json
+import pygame, random, json, time
 import urllib.error, urllib.request 
 
 
 from tramas import *
 from lib import *
-from datetime import datetime
+from datetime import date, datetime
 
 def print_sunny_day(screen, rect):
     # Changing the background of the weather API - Sunny day
     sun = pygame.image.load(SUN_ICON)
     sun_rect = sun.get_rect().clip(rect)
     
+    alpha = sun.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([50,50,50,50])
+    
     screen.blit(sun,sun_rect)
+    screen.blit(alpha,alpha_rect)
 
 
 def print_rainy_day(screen, rect, rain):
@@ -20,7 +25,12 @@ def print_rainy_day(screen, rect, rain):
     cloud = pygame.image.load(CLOUD_ICON)
     cloud_rect = cloud.get_rect().clip(rect)
     
+    alpha = cloud.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([0,0,0,50])
+    
     screen.blit(cloud,cloud_rect)
+    screen.blit(alpha,alpha_rect)
 
     # Let's move each drop of the rain array to simulate the drop is moving
     # In each iteration of the while loop the drop will move one pixel in 
@@ -46,9 +56,10 @@ def print_cloudy_day(screen, rect):
     # Changing the background of the weather API - Cloudy day
     cloud = pygame.image.load(CLOUD_ICON)
     cloud_rect = cloud.get_rect().clip(rect)
+    
     alpha = cloud.convert_alpha()
     alpha_rect = alpha.get_rect().clip(rect)
-    alpha.fill([0,0,0,100])
+    alpha.fill([0,0,0,50])
     
     screen.blit(cloud,cloud_rect)
     screen.blit(alpha,alpha_rect)
@@ -59,7 +70,12 @@ def print_dark_night(screen, rect):
     night = pygame.image.load(NIGHT_ICON)
     night_rect = night.get_rect().clip(rect)
     
+    alpha = night.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([0,0,0,50])
+    
     screen.blit(night,night_rect)
+    screen.blit(alpha,alpha_rect)
 
 
 def print_cloudy_night(screen, rect):
@@ -67,7 +83,12 @@ def print_cloudy_night(screen, rect):
     cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
     cloudy_night_rect = cloud_night.get_rect().clip(rect)
     
+    alpha = cloud_night.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([0,0,0,50])
+    
     screen.blit(cloud_night,cloudy_night_rect)
+    screen.blit(alpha,alpha_rect)
 
 
 def print_rainy_night(screen, rect, rain):
@@ -75,7 +96,13 @@ def print_rainy_night(screen, rect, rain):
     cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
     cloudy_night_rect = cloud_night.get_rect().clip(rect)
     
+    alpha = cloud_night.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([0,0,0,50])
+    
     screen.blit(cloud_night,cloudy_night_rect)
+    screen.blit(alpha,alpha_rect)
+    
 
     # Let's move each drop of the rain array to simulate the drop is moving
     # In each iteration of the while loop the drop will move one pixel in 
@@ -116,8 +143,10 @@ class CurrentWeather():
         self.sunset_hour    = ""
         self.timezone       = ""
         self.its_day        = ""
+        self.time       = ""
 
-        self.get_weather_info()        
+        self.get_weather_info()  
+        self.get_time()      
     
     def __calling_the_API(self):
         try:  
@@ -129,6 +158,9 @@ class CurrentWeather():
 
         except urllib.error.HTTPError as e:
             pass
+
+    def get_time(self):
+        self.time = str(datetime.now().strftime('%H:%M'))
 
     def get_weather_info(self):   
         # Calling the API
@@ -348,6 +380,10 @@ class MainWindow():
             temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
             temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
             screen.blit(temp_minmax_text,temp_minmax_rect)
+
+            time_text = pygame.font.Font(None,30).render(str(cw.time), True, WHITE)
+            time_rect = time_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 4*WEATHER_WINDOW_HEIGHT/5 + 5))
+            screen.blit(time_text, time_rect)
         
         # Let's just update the surface we are changing in order to save CPU time
         pygame.display.update(self.btn_weather.get_Rect())
@@ -581,16 +617,110 @@ class BlindWindow():
         if items.blind[1] == True:
             pass
 
+class Slider():
+    def __init__(self, screen, text, tam_text, text_color, text_pos, 
+                bar_color, bar_pos, bar_width, bar_height, left_bar_text, left_bar_text_pos, right_bar_text, right_bar_text_pos,
+                slider_color, slider_pos, slider_width, slider_height,
+                division = 100, info=False, info_pos=None, offset=0):
+
+        self.mark = slider_pos[0]
+
+        self.screen = screen
+        self.bar_color = bar_color
+        self.bar_pos = bar_pos
+        self.bar_width = bar_width
+        self.bar_height = bar_height
+        self.slider_color = slider_color
+        self.slider_width = slider_width
+        self.slider_height = slider_height
+        self.slider_pos = slider_pos
+        self.division = division
+        self.offset = offset
+
+        self.text = pygame.font.Font(None,tam_text).render(text, True, text_color)
+        self.rect = self.text.get_rect(center=(text_pos[0],text_pos[1]))
+    
+        
+        if info==True and not info_pos==None:
+            self.info_img   = pygame.image.load(INFO_ICON)
+            self.info_rect  = self.info_img.get_rect(left=info_pos[0], top=info_pos[1])
+            
+                
+               
+        self.zero_wh_text = pygame.font.Font(None,15).render(left_bar_text, True, BLACK)
+        self.zero_wh_rect = self.zero_wh_text.get_rect(left=left_bar_text_pos[0],top=left_bar_text_pos[1])    
+        
+        self.tfour_wh_text= pygame.font.Font(None,15).render(right_bar_text, True, BLACK)
+        self.tfour_wh_rect= self.zero_wh_text.get_rect(left=right_bar_text_pos[0], top=right_bar_text_pos[1])
+
+    def draw(self):   
+        pygame.draw.rect(self.screen, self.bar_color, (self.bar_pos[0],self.bar_pos[1],self.bar_width,self.bar_height))
+        pygame.draw.rect(self.screen, self.slider_color, (self.mark,self.slider_pos[1],self.slider_width,self.slider_height))
+        
+        if self.offset==0:
+            self.mark_text = pygame.font.Font(None,15).render(str(int(self.division*((self.mark-self.bar_pos[0]+5)/self.bar_width))), True, BLACK)
+        else:
+            self.mark_text = pygame.font.Font(None,15).render(str(int(self.division*((self.mark-self.bar_pos[0]+5)/self.bar_width))+self.offset), True, BLACK)
+        self.mark_rect = self.mark_text.get_rect(left=self.mark, top=self.bar_pos[1]+12)
+
+        self.screen.blit(self.text,self.rect)                    # Print the slider text
+        self.screen.blit(self.info_img, self.info_rect)          # Print the info button
+        self.screen.blit(self.mark_text, self.mark_rect)         # Print the mark indicator  - slider pos
+        self.screen.blit(self.zero_wh_text, self.zero_wh_rect)   # Print the left indicator  - limit
+        self.screen.blit(self.tfour_wh_text, self.tfour_wh_rect) # Print the right indicator - limit
+
+        if pygame.mouse.get_pressed()[0]:
+            mx,my = pygame.mouse.get_pos()
+
+            if mx > self.bar_pos[0] and mx < (self.bar_pos[0]+self.bar_width) and my > self.slider_pos[1] and my < self.slider_pos[1] + self.slider_height:
+                self.mark = mx 
+
 
 class SettingsWindow():
-    def __init__(self):
+    def __init__(self, screen):
         # Button for going back to main window
         self.go_back_button         = Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
-        self.send_setting_button    = Button("Save", BTN_SEND_DATA_POS, BTN_SEND_DATA_WIDTH, BTN_SEND_DATA_HEIGHT,BTN_ELEVATION, pygame.font.Font(None,20), SUPER_LIGHT_BLUE, LIGHT_BLUE)  
+        self.send_setting_button    = Button("Save", BTN_SEND_DATA_POS, BTN_SEND_DATA_WIDTH, BTN_SEND_DATA_HEIGHT,BTN_ELEVATION, pygame.font.Font(None,20), SUPER_LIGHT_BLUE, LIGHT_BLUE)       
 
-        self.wh_slider_left = 54
-        self.wh_slider_top = 72
+        self.wh_slider = Slider(screen,WH_TEXT,WH_TEXT_TAM,WH_TEXT_COLOR,WH_TEXT_POS,
+                                WH_BAR_COLOR,WH_BAR_POS,WH_BAR_WIDTH,WH_BAR_HEIGHT,WH_LEFT_BAR_TEXT,WH_LEFT_BAR_TEXT_POS,WH_RIGHT_BAR_TEXT,WH_RIGHT_BAR_TEXT_POS,
+                                WH_SLIDER_COLOR,WH_SLIDER_POS,WH_SLIDER_WIDTH,WH_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = WH_INFO_POS)
 
+        self.nh_slider = Slider(screen,NH_TEXT,NH_TEXT_TAM,NH_TEXT_COLOR,NH_TEXT_POS,
+                                NH_BAR_COLOR,NH_BAR_POS,NH_BAR_WIDTH,NH_BAR_HEIGHT,NH_LEFT_BAR_TEXT,NH_LEFT_BAR_TEXT_POS,NH_RIGHT_BAR_TEXT,NH_RIGHT_BAR_TEXT_POS,
+                                NH_SLIDER_COLOR,NH_SLIDER_POS,NH_SLIDER_WIDTH,NH_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = NH_INFO_POS)
+
+        self.bh_slider = Slider(screen,BH_TEXT,BH_TEXT_TAM,BH_TEXT_COLOR,BH_TEXT_POS,
+                                BH_BAR_COLOR,BH_BAR_POS,BH_BAR_WIDTH,BH_BAR_HEIGHT,BH_LEFT_BAR_TEXT,BH_LEFT_BAR_TEXT_POS,BH_RIGHT_BAR_TEXT,BH_RIGHT_BAR_TEXT_POS,
+                                BH_SLIDER_COLOR,BH_SLIDER_POS,BH_SLIDER_WIDTH,BH_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = BH_INFO_POS)
+
+        self.st_slider = Slider(screen,ST_TEXT,ST_TEXT_TAM,ST_TEXT_COLOR,ST_TEXT_POS,
+                                ST_BAR_COLOR,ST_BAR_POS,ST_BAR_WIDTH,ST_BAR_HEIGHT,ST_LEFT_BAR_TEXT,ST_LEFT_BAR_TEXT_POS,ST_RIGHT_BAR_TEXT,ST_RIGHT_BAR_TEXT_POS,
+                                ST_SLIDER_COLOR,ST_SLIDER_POS,ST_SLIDER_WIDTH,ST_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = ST_INFO_POS)
+
+        self.t_slider  = Slider(screen,T_TEXT,T_TEXT_TAM,T_TEXT_COLOR,T_TEXT_POS,
+                                T_BAR_COLOR,T_BAR_POS,T_BAR_WIDTH,T_BAR_HEIGHT,T_LEFT_BAR_TEXT,T_LEFT_BAR_TEXT_POS,T_RIGHT_BAR_TEXT,T_RIGHT_BAR_TEXT_POS,
+                                T_SLIDER_COLOR,T_SLIDER_POS,T_SLIDER_WIDTH,T_SLIDER_HEIGHT,
+                                15,info=True,info_pos = T_INFO_POS)
+
+        self.trm_slider= Slider(screen,TR_TEXT,TR_TEXT_TAM,TR_TEXT_COLOR,TR_TEXT_POS,
+                                TR_BAR_COLOR,TR_BAR_POS,TR_BAR_WIDTH,TR_BAR_HEIGHT,TR_LEFT_BAR_TEXT,TR_LEFT_BAR_TEXT_POS,TR_RIGHT_BAR_TEXT,TR_RIGHT_BAR_TEXT_POS,
+                                TR_SLIDER_COLOR,TR_SLIDER_POS,TR_SLIDER_WIDTH,TR_SLIDER_HEIGHT,
+                                15,info=True,info_pos = TR_INFO_POS,offset=15)
+        
+        self.trM_slider= Slider(screen,TRM_TEXT,TRM_TEXT_TAM,TRM_TEXT_COLOR,TRM_TEXT_POS,
+                                TRM_BAR_COLOR,TRM_BAR_POS,TRM_BAR_WIDTH,TRM_BAR_HEIGHT,TRM_LEFT_BAR_TEXT,TRM_LEFT_BAR_TEXT_POS,TRM_RIGHT_BAR_TEXT,TRM_RIGHT_BAR_TEXT_POS,
+                                TRM_SLIDER_COLOR,TRM_SLIDER_POS,TRM_SLIDER_WIDTH,TRM_SLIDER_HEIGHT,
+                                15,info=True,info_pos = TRM_INFO_POS,offset=15)
+
+        self.lt_slider = Slider(screen,LT_TEXT,LT_TEXT_TAM,LT_TEXT_COLOR,LT_TEXT_POS,
+                                LT_BAR_COLOR,LT_BAR_POS,LT_BAR_WIDTH,LT_BAR_HEIGHT,LT_LEFT_BAR_TEXT,LT_LEFT_BAR_TEXT_POS,LT_RIGHT_BAR_TEXT,LT_RIGHT_BAR_TEXT_POS,
+                                LT_SLIDER_COLOR,LT_SLIDER_POS,LT_SLIDER_WIDTH,LT_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = LT_INFO_POS)
 
     def print_settings_window(self, screen, functions, items):
         # Go back button
@@ -599,85 +729,18 @@ class SettingsWindow():
         
         # Title text
         self.setting_text = pygame.font.Font(None,40).render("SETTINGS", True, BLACK)
-        self.setting_rect = self.setting_text.get_rect(center=(WINDOW_SIZE[0]/2, 25))
+        self.setting_rect = self.setting_text.get_rect(center=(WINDOW_SIZE[0]/2, 15))
         screen.blit(self.setting_text,self.setting_rect)
 
         # Wake hour slider
-        self.wake_text = pygame.font.Font(None,20).render("Waking hour", True, BLACK)
-        self.wake_rect = self.wake_text.get_rect(center=(WINDOW_SIZE[0]/2,50))
-        screen.blit(self.wake_text,self.wake_rect)
-        
-        self.info_img_wh    = pygame.image.load(INFO_ICON)
-        self.info_rect_wh = self.info_img_wh.get_rect(left=15, top=50)
-        screen.blit(self.info_img_wh, self.info_rect_wh)
-        
-        
-        pygame.draw.rect(screen, [200,200,200], (54,80,200,2))
-        pygame.draw.rect(screen, [155,155,155], (self.wh_slider_left,self.wh_slider_top,SLIDER_WIDTH,SLIDER_HEIGHT))
-        
-        self.wh_hour_text = pygame.font.Font(None,15).render(str(int(24/(200/(self.wh_slider_left-53)))), True, BLACK)
-        self.wh_hour_rect = self.wh_hour_text.get_rect(left=self.wh_slider_left, top=60)
-        screen.blit(self.wh_hour_text, self.wh_hour_rect)
+        self.wh_slider.draw()
+        self.nh_slider.draw()
+        self.bh_slider.draw()
+        self.st_slider.draw()
+        self.st_slider.draw()
+        self.t_slider.draw()
+        self.trm_slider.draw()
+        self.trM_slider.draw()
+        self.lt_slider.draw()
 
-        self.zero_wh_text = pygame.font.Font(None,15).render("0", True, BLACK)
-        self.zero_wh_rect = self.zero_wh_text.get_rect(left=40,top=80)
-        self.tfour_wh_text= pygame.font.Font(None,15).render("24", True, BLACK)
-        self.tfour_wh_rect= self.zero_wh_text.get_rect(left=264, top=80)
-        screen.blit(self.zero_wh_text, self.zero_wh_rect)
-        screen.blit(self.tfour_wh_text, self.tfour_wh_rect)
-
-        if pygame.mouse.get_pressed()[0]:
-            mx,my = pygame.mouse.get_pos()
-
-            if mx > 54 and mx < 254 and my > self.wh_slider_top and my < self.wh_slider_top + SLIDER_HEIGHT:
-                self.wh_slider_left = mx 
-
-
-        # Not home hour slider
-        self.not_home_text = pygame.font.Font(None,20).render("Not in home hour", True, BLACK)
-        self.not_home_rect = self.not_home_text.get_rect(center=(WINDOW_SIZE[0]/2,100))
-        screen.blit(self.not_home_text,self.not_home_rect)
-        self.info_img_nh   = pygame.image.load(INFO_ICON)
-        self.info_rect_nh  = self.info_img_nh.get_rect(left=15, top=100)
-        screen.blit(self.info_img_nh, self.info_rect_nh)
-
-        # Back home hour slider
-        self.back_home_text = pygame.font.Font(None,20).render("Back Home hour", True, BLACK)
-        self.back_home_rect = self.back_home_text.get_rect(center=(WINDOW_SIZE[0]/2,170))
-        screen.blit(self.back_home_text,self.back_home_rect)
-        self.info_img_bh    = pygame.image.load(INFO_ICON)
-        self.info_rect_bh   = self.info_img_bh.get_rect(left=15, top=160)
-        screen.blit(self.info_img_bh, self.info_rect_bh)
-
-        # Sleep time slider
-        self.sleep_text = pygame.font.Font(None,20).render("Sleep time", True, BLACK)
-        self.sleep_rect = self.sleep_text.get_rect(center=(WINDOW_SIZE[0]/2,230))
-        screen.blit(self.sleep_text,self.sleep_rect)
-        self.info_img_st    = pygame.image.load(INFO_ICON)
-        self.info_rect_st   = self.info_img_st.get_rect(left=15, top=220)
-        screen.blit(self.info_img_st, self.info_rect_st)
-
-        # Temperature slider
-        self.temp_text = pygame.font.Font(None,20).render("Default Temperature", True, BLACK)
-        self.temp_rect = self.temp_text.get_rect(center=(WINDOW_SIZE[0]/2,290))
-        screen.blit(self.temp_text,self.temp_rect)
-        self.info_img_t  = pygame.image.load(INFO_ICON)
-        self.info_rect_t = self.info_img_t.get_rect(left=15, top=280)
-        screen.blit(self.info_img_t, self.info_rect_t)
-
-        # Temperature min max slider
-        self.tempmm_text = pygame.font.Font(None,20).render("Range Temperature", True, BLACK)
-        self.tempmm_rect = self.tempmm_text.get_rect(center=(WINDOW_SIZE[0]/2,350))
-        screen.blit(self.tempmm_text,self.tempmm_rect)
-        self.info_img_tmm  = pygame.image.load(INFO_ICON)
-        self.info_rect_tmm = self.info_img_t.get_rect(left=15, top=340)
-        screen.blit(self.info_img_tmm, self.info_rect_tmm)
-
-        # Laundry time
-        self.laundry_text = pygame.font.Font(None,20).render("laundry time", True, BLACK)
-        self.laundry_rect = self.laundry_text.get_rect(center=(WINDOW_SIZE[0]/2,410))
-        screen.blit(self.laundry_text,self.laundry_rect)
-        self.info_img_l   = pygame.image.load(INFO_ICON)
-        self.info_rect_l  = self.info_img_l.get_rect(left=15, top=400)
-        screen.blit(self.info_img_l, self.info_rect_l)
 
