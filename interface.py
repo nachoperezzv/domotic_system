@@ -1,10 +1,11 @@
-from turtle import update
 from features import *
 from tramas import *
-from _thread import *
+from lib import *
+
 from threading import Thread
 
 import pygame, sys, time
+import socket
 
 # ----------------------------
 # Initializing pygame window |
@@ -14,6 +15,10 @@ screen = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption(WINDOW_CAP)
 pygame.display.set_icon(pygame.image.load(WINDOW_ICON))
 
+# ---------------------------------------
+# Variable for infinite loop of the app |
+# ---------------------------------------
+DoIt =  True
 
 # ----------------------
 # Initializing the API |
@@ -30,8 +35,8 @@ items = Items()
 # Initializing the tcp/ip of the house |
 # --------------------------------------
 # Creates the tcp/ip connection object
-trama = "0"
-data = ""
+trama   = "0"
+data    = ""
 
 class TCPIPconnection():
     def __init__(self):
@@ -60,11 +65,12 @@ class TCPIPconnection():
         
         self.updateItems()
         
-        print("--------")
-        print("trama: ", type(str(trama)), trama)
-        print("data: ", type(data), type(data[0]), data)
-        print("items: ", items.led, items.tv, items.air[1],items.appliance, items.blind[1])
-    
+        # print("--------")
+        # print("trama: ", type(str(trama)), trama)
+        # print("data: ", type(data), type(data[0]), data)
+        # print("items: ", items.led, items.tv, items.air[1],items.appliance, items.blind[1])
+        
+        
     def to_list(self,string):
         list1=[]
         list1[:0]=string
@@ -85,7 +91,6 @@ class TCPIPconnection():
 # tcpip = TCPIPconnection()
 # tcpip.connect(IP,PORT)
 tcpip = TCPIPconnection()
-
 
 # ---------------------------------
 # Creating the different windows  |
@@ -159,6 +164,9 @@ def moving_to_setting_window():
     global current_screen
     current_screen = 7
 
+def send_settings_data():
+    pass
+
 # Let's just create a vector that contains all the functions just so it will be easier to call the function print of the main buttons
 main_functions      = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window, moving_to_air_window, moving_to_appliance_window ,moving_to_blind_window, moving_to_setting_window]
 weather_functions   = [moving_to_main_window]
@@ -167,7 +175,7 @@ tv_functions        = [moving_to_main_window]
 air_functions       = [moving_to_main_window]
 appliance_functions = [moving_to_main_window]
 blinds_functions    = [moving_to_main_window]
-settings_functions  = [moving_to_main_window]
+settings_functions  = [moving_to_main_window, send_settings_data]
 
 # --------------------------
 # Creating the rain vector |
@@ -234,8 +242,8 @@ while DoIt:
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
-        trama = light_window.print_lights_window(screen, lights_functions, items, trama)
-        print(trama)
+        trama = light_window.print_lights_window(screen, lights_functions, items)
+        # print(trama)
     elif current_screen == 3:
         tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:

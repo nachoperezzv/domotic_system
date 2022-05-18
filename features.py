@@ -1,80 +1,101 @@
-import pygame, os, random, json
-import urllib.error, urllib.request 
-import socket
 
-from sklearn.covariance import ledoit_wolf 
+import pygame, random, json
+import urllib.error, urllib.request 
+
 
 from tramas import *
+from lib import *
 from datetime import datetime
 
-# Variable for infinite loop of the app
-DoIt            =   True
-
-# Constants and variables
-DIR_PATH            =   os.path.dirname(os.path.abspath(__file__))
-ICON_PATH           =   DIR_PATH + "/config/icons/"
-WEATHER_ICON_PATH   =   DIR_PATH + "/config/weather_icons/"
-WINDOW_ICON_PATH    =   DIR_PATH + "/config/window_icons/"
-
-WINDOW_SIZE         =   [314,472]   # 8cm (width) x 12 cm(height) x 100 ppp = 13 inches
-WINDOW_CAP          =   "Domotic System"
-WINDOW_ICON         =   ICON_PATH + "house_icon.png"
-
-WEATHER_WINDOW_WIDTH    =   WINDOW_SIZE[0] - 4
-WEATHER_WINDOW_HEIGHT   =   150
-
-CLOUD_ICON          =   WEATHER_ICON_PATH + "clouds.png"   
-CLOUDY_NIGHT_ICON   =   WEATHER_ICON_PATH + "cloudy_night.png"
-SUN_ICON            =   WEATHER_ICON_PATH + "sun.png"
-NIGHT_ICON          =   WEATHER_ICON_PATH + "night.png"
-
-AIR_WINDOW_BG       =   WINDOW_ICON_PATH + "air.png"
-TV_WINDOW_BG        =   WINDOW_ICON_PATH + "tv.png"
-LIGHTS_WINDOW_BG    =   WINDOW_ICON_PATH + "lights.png"
-BLIND_WINDOW_BG     =   WINDOW_ICON_PATH + "blind.png"
-APPLIANCE_WIN_BG    =   WINDOW_ICON_PATH + "appliance.png"
-
-# Defining colors 
-BLACK               =   [0,0,0,155]
-WHITE               =   [255,255,255]
-BLUE_SKY            =   [64,207,255]
-LIGHT_BLUE          =   [120,120,255]
-SUPER_LIGHT_BLUE    =   [150,150,255]
-HIPER_LIGHT_BLUE    =   [175,175,255]
-
-BLUE_RAIN           =   [165,180,220]#[255,0,0]
-LIGHT_BLUE_RAIN     =   [165,180,200]#[0,255,0]
-VERY_LIGHT_BLUE_RAIN=   [165,180,180]#[0,0,255]
-RAIN_COLORS         =   [BLUE_RAIN, LIGHT_BLUE_RAIN, VERY_LIGHT_BLUE_RAIN]
-
-# Rain Variables
-DROP_NUMBER         =   20
-
-DROP_THICK          =   2
-DROP_THIN           =   1
-DROP_THICKNESS      =   [DROP_THICK, DROP_THIN]
-
-DROP_LEN_LONG       =   20#5
-DROP_LEN_SHORT      =   10#3
-DROP_LEN_VERY_SHORT =   5
-DROP_LEN            =   [DROP_LEN_LONG, DROP_LEN_SHORT, DROP_LEN_VERY_SHORT]
-
-DROP_FAST           =   2
-DROP_SLOW           =   1.5 
-DROP_VERY_SLOW      =   1
-DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
+def print_sunny_day(screen, rect):
+    # Changing the background of the weather API - Sunny day
+    sun = pygame.image.load(SUN_ICON)
+    sun_rect = sun.get_rect().clip(rect)
+    
+    screen.blit(sun,sun_rect)
 
 
-# Time Variables
-TIMESTAMP           =   90 #secs
+def print_rainy_day(screen, rect, rain):
+    # Changing the background of the weather API - Cloudy day
+    cloud = pygame.image.load(CLOUD_ICON)
+    cloud_rect = cloud.get_rect().clip(rect)
+    
+    screen.blit(cloud,cloud_rect)
 
-# API Variables 
-API_url             = "https://api.openweathermap.org/data/2.5/weather?"
-API_key             = "&appid=7e529a7df215e65c222ec1f24c8fe80c"
-API_city            = "&q=Alicante,ES"
-API_units           = "&units=metric" 
+    # Let's move each drop of the rain array to simulate the drop is moving
+    # In each iteration of the while loop the drop will move one pixel in 
+    # y axis
+    for drop in rain:
+        pygame.draw.line(screen, 
+                        drop.colour, 
+                        [drop.start_pos.x,drop.start_pos.y], 
+                        [drop.end_pos.x,drop.end_pos.y], 
+                        drop.thickness)
+        
+        drop.start_pos.y = drop.start_pos.y + drop.velocity
+        drop.end_pos.y = drop.start_pos.y + drop.length
 
-API                 = API_url + API_city + API_units + API_key
+        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
+            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
+            drop.end_pos.x = drop.start_pos.x
+            drop.start_pos.y = 2
+            drop.end_pos.y = drop.start_pos.y + drop.length
+
+
+def print_cloudy_day(screen, rect):
+    # Changing the background of the weather API - Cloudy day
+    cloud = pygame.image.load(CLOUD_ICON)
+    cloud_rect = cloud.get_rect().clip(rect)
+    alpha = cloud.convert_alpha()
+    alpha_rect = alpha.get_rect().clip(rect)
+    alpha.fill([0,0,0,100])
+    
+    screen.blit(cloud,cloud_rect)
+    screen.blit(alpha,alpha_rect)
+    
+
+def print_dark_night(screen, rect):
+    # Changing the background of the weather API - Night
+    night = pygame.image.load(NIGHT_ICON)
+    night_rect = night.get_rect().clip(rect)
+    
+    screen.blit(night,night_rect)
+
+
+def print_cloudy_night(screen, rect):
+    # Changing the background of the weather API - Cloudy night
+    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
+    cloudy_night_rect = cloud_night.get_rect().clip(rect)
+    
+    screen.blit(cloud_night,cloudy_night_rect)
+
+
+def print_rainy_night(screen, rect, rain):
+    # Changing the background of the weather API - Cloudy night
+    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
+    cloudy_night_rect = cloud_night.get_rect().clip(rect)
+    
+    screen.blit(cloud_night,cloudy_night_rect)
+
+    # Let's move each drop of the rain array to simulate the drop is moving
+    # In each iteration of the while loop the drop will move one pixel in 
+    # y axis
+    for drop in rain:
+        pygame.draw.line(screen, 
+                        drop.colour, 
+                        [drop.start_pos.x,drop.start_pos.y], 
+                        [drop.end_pos.x,drop.end_pos.y], 
+                        drop.thickness)
+        
+        drop.start_pos.y = drop.start_pos.y + drop.velocity
+        drop.end_pos.y = drop.start_pos.y + drop.length
+
+        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
+            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
+            drop.end_pos.x = drop.start_pos.x
+            drop.start_pos.y = 2
+            drop.end_pos.y = drop.start_pos.y + drop.length
+
 
 class CurrentWeather():
     def __init__(self):
@@ -175,40 +196,6 @@ class CurrentWeather():
             self.its_day = False
         
 
-VALID_CLOUD_RATE    = 30 #%
-VALID_RAIN_RATE     = 1
-
-
-# Buttons configuration
-BTN_ELEVATION       =   3
-
-BTN_WEATHER_WIDTH   =   WEATHER_WINDOW_WIDTH
-BTN_WEATHER_HEIGHT  =   WEATHER_WINDOW_HEIGHT - 4
-BTN_WEATHER_POS     =   [2,2]
-
-BTN_LIGHTS_WIDTH    =   WINDOW_SIZE[0]/2 - 2
-BTN_LIGHTS_HEIGHT   =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2 
-BTN_LIGHTS_POS      =   [2,0*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
-BTN_TV_WIDTH        =   WINDOW_SIZE[0]/2 - 4
-BTN_TV_HEIGHT       =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_TV_POS          =   [WINDOW_SIZE[0]/2 + 2,0*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
-BTN_AIR_WIDTH       =   WINDOW_SIZE[0]/2 - 2
-BTN_AIR_HEIGHT      =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_AIR_POS         =   [2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
-BTN_APPLIANCE_WIDTH =   WINDOW_SIZE[0]/2 - 4
-BTN_APPLIANCE_HEIGHT=   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 2
-BTN_APPLIANCE_POS   =   [WINDOW_SIZE[0]/2 + 2,1*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
-BTN_BLINDS_WIDTH    =   WINDOW_SIZE[0] - 4
-BTN_BLINDS_HEIGHT   =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
-BTN_BLINDS_POS      =   [2,2*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT +2]
-BTN_SETTINGS_WIDTH  =   WINDOW_SIZE[0] - 4
-BTN_SETTINGS_HEIGHT =   (WINDOW_SIZE[1] - WEATHER_WINDOW_HEIGHT)/4 - 4
-BTN_SETTINGS_POS    =   [2,3*(WINDOW_SIZE[1]-WEATHER_WINDOW_HEIGHT)/4 + WEATHER_WINDOW_HEIGHT + 2]
-
-BTN_GO_BACK_WIDTH   =   30
-BTN_GO_BACK_HEIGHT  =   30
-BTN_GO_BACK_POS     =   [WINDOW_SIZE[0] - 45, 15]
-
 class Button:
     def __init__(self,text,pos,width,height,elevation,font, color_on, color_off):
     #Core attributes 
@@ -282,91 +269,6 @@ class WaterDrop():
         pass
 
 
-def print_sunny_day(screen, rect):
-    # Changing the background of the weather API - Sunny day
-    sun = pygame.image.load(SUN_ICON)
-    sun_rect = sun.get_rect().clip(rect)
-    
-    screen.blit(sun,sun_rect)
-
-
-def print_rainy_day(screen, rect, rain):
-    # Changing the background of the weather API - Cloudy day
-    cloud = pygame.image.load(CLOUD_ICON)
-    cloud_rect = cloud.get_rect().clip(rect)
-    
-    screen.blit(cloud,cloud_rect)
-
-    # Let's move each drop of the rain array to simulate the drop is moving
-    # In each iteration of the while loop the drop will move one pixel in 
-    # y axis
-    for drop in rain:
-        pygame.draw.line(screen, 
-                        drop.colour, 
-                        [drop.start_pos.x,drop.start_pos.y], 
-                        [drop.end_pos.x,drop.end_pos.y], 
-                        drop.thickness)
-        
-        drop.start_pos.y = drop.start_pos.y + drop.velocity
-        drop.end_pos.y = drop.start_pos.y + drop.length
-
-        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
-            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
-            drop.end_pos.x = drop.start_pos.x
-            drop.start_pos.y = 2
-            drop.end_pos.y = drop.start_pos.y + drop.length
-
-
-def print_cloudy_day(screen, rect):
-    # Changing the background of the weather API - Cloudy day
-    cloud = pygame.image.load(CLOUD_ICON)
-    cloud_rect = cloud.get_rect().clip(rect)
-    
-    screen.blit(cloud,cloud_rect)
-    
-
-def print_dark_night(screen, rect):
-    # Changing the background of the weather API - Night
-    night = pygame.image.load(NIGHT_ICON)
-    night_rect = night.get_rect().clip(rect)
-    
-    screen.blit(night,night_rect)
-
-
-def print_cloudy_night(screen, rect):
-    # Changing the background of the weather API - Cloudy night
-    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
-    cloudy_night_rect = cloud_night.get_rect().clip(rect)
-    
-    screen.blit(cloud_night,cloudy_night_rect)
-
-
-def print_rainy_night(screen, rect, rain):
-    # Changing the background of the weather API - Cloudy night
-    cloud_night = pygame.image.load(CLOUDY_NIGHT_ICON)
-    cloudy_night_rect = cloud_night.get_rect().clip(rect)
-    
-    screen.blit(cloud_night,cloudy_night_rect)
-
-    # Let's move each drop of the rain array to simulate the drop is moving
-    # In each iteration of the while loop the drop will move one pixel in 
-    # y axis
-    for drop in rain:
-        pygame.draw.line(screen, 
-                        drop.colour, 
-                        [drop.start_pos.x,drop.start_pos.y], 
-                        [drop.end_pos.x,drop.end_pos.y], 
-                        drop.thickness)
-        
-        drop.start_pos.y = drop.start_pos.y + drop.velocity
-        drop.end_pos.y = drop.start_pos.y + drop.length
-
-        if drop.start_pos.y > WEATHER_WINDOW_HEIGHT:
-            drop.start_pos.x = random.randrange(2, WEATHER_WINDOW_WIDTH - 4)
-            drop.end_pos.x = drop.start_pos.x
-            drop.start_pos.y = 2
-            drop.end_pos.y = drop.start_pos.y + drop.length
-
 # This is the class that will save the state of each item connected in the house
 class Items():
 
@@ -384,47 +286,7 @@ class Items():
     def get_trama(self):
         t = str(int(self.led))+str(int(self.tv))+str(int(self.air[1]))+str(int(self.appliance))+str(int(self.blind[1]))
         return t  
-    # def get_item_status(self,tcpip, trama):
-    #     tcpip.send_data(trama)
-    #     return int(tcpip.read_line())
-    #     #print("Data received: ", type(item), item)
 
-    # def set_item_status(self,tcpip, trama):
-    #     tcpip.send_data(trama)
-
-# TCP/IP Connection
-IP                  = '192.168.100.2'
-PORT                = 8888
-
-# class TCPIPconnection():
-#     def __init__(self):
-#         # TCP/IP socket declaration
-#         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#         self.connect(IP,PORT)
-#         self.check_connection()
-        
-#     def connect(self, ip, port):
-#         # Connecting to server
-#         self.server_address = (ip, port)
-#         print('connecting to {} port {}'.format(*self.server_address))
-#         self.sock.connect(self.server_address)
-
-#     def check_connection(self):
-#         # Sending a message to the ESP8266 and printing the response.
-#         # This should be a string: 'Connected'
-#         self.sock.send("connecting".encode('ascii'))
-#         msg = self.sock.recv(1024)
-#         print(msg.decode('ascii'))
-
-#     def read_line(self):
-#         # Reading data until newline
-#         return self.sock.recv(8).decode('utf-8')        
-
-#     def send_data(self, data):
-#         # Sending data to server
-#         # s = bytes(data,'ascii')
-#         self.sock.send(bytes(data,'ascii'))
- 
 
 # This is the class for the main window. It contais the buttons that fill the window and the functions that will print them. The simulation of the weather is also defined here. 
 class MainWindow():
@@ -501,6 +363,7 @@ class WeatherWindow():
 
 
 class LightsWindow():
+
     def __init__(self):
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)      
@@ -509,30 +372,30 @@ class LightsWindow():
         self.light_plan_img =   pygame.image.load(LIGHTS_WINDOW_BG)
         self.light_plan_rect=   self.light_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
-    def print_lights_window(self, screen, functions, items, trama):
+    def print_lights_window(self, screen, functions, items):
         screen.blit(self.light_plan_img, self.light_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        tr = self.check_light_status(items, trama)
+        tr = self.check_light_status(items)
         self.print_indicator(screen, items)
         self.do_lights_simulation(screen, items)
 
         return tr
 
-    def check_light_status(self, items, trama):
+    def check_light_status(self, items):
+        global last_mouse_state
         mx, my = pygame.mouse.get_pos()
         if mx > 240 and mx < 260 and my > 225 and my < 245: 
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if items.led == 1:
-                        items.led = 0
-                    elif items.led == 0:
-                        items.led = 1
-                    
-                    tr = str(1) + items.get_trama()
-                    print(type(tr), tr)
-                    return tr
-                    # return trama
+            mouse_state = pygame.mouse.get_pressed()
+            if mouse_state[0] == True and last_mouse_state > 25:
+                if items.led == 1:
+                    items.led = 0
+                elif items.led == 0:
+                    items.led = 1
+                last_mouse_state = 0
+                tr = str(1) + items.get_trama()
+                return tr
+            last_mouse_state += 1
         else:
             tr = str(0)
             return tr
@@ -703,13 +566,13 @@ class BlindWindow():
     def print_blind_indicator(self,screen,items):
         if items.blind[1] == True:                  # Blinds On
             if items.blind[0] < items.blind_top:
-                blind_text = pygame.font.Font(None,20).render("Blind Going up",True, [50,250,50],)
+                blind_text = pygame.font.Font(None,20).render("Blind Going up",True, [50,250,50])
                 blind_rect = blind_text.get_rect(left=35, top=25)
             elif items.blind[1] > items.blind_top:
-                blind_text = pygame.font.Font(None,20).render("Blind Going down",True, [50,250,50],)
+                blind_text = pygame.font.Font(None,20).render("Blind Going down",True, [50,250,50])
                 blind_rect = blind_text.get_rect(left=35, top=25)
         else:
-            blind_text = pygame.font.Font(None,20).render("Blind Going Off",True, [250,50,50],)
+            blind_text = pygame.font.Font(None,20).render("Blind Going Off",True, [250,50,50])
             blind_rect = blind_text.get_rect(left=35, top=25)
 
         screen.blit(blind_text,blind_rect)
@@ -722,7 +585,99 @@ class BlindWindow():
 class SettingsWindow():
     def __init__(self):
         # Button for going back to main window
-        self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.go_back_button         = Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
+        self.send_setting_button    = Button("Save", BTN_SEND_DATA_POS, BTN_SEND_DATA_WIDTH, BTN_SEND_DATA_HEIGHT,BTN_ELEVATION, pygame.font.Font(None,20), SUPER_LIGHT_BLUE, LIGHT_BLUE)  
+
+        self.wh_slider_left = 54
+        self.wh_slider_top = 72
+
 
     def print_settings_window(self, screen, functions, items):
+        # Go back button
         self.go_back_button.draw(screen, functions[0])
+        self.send_setting_button.draw(screen, functions[1])
+        
+        # Title text
+        self.setting_text = pygame.font.Font(None,40).render("SETTINGS", True, BLACK)
+        self.setting_rect = self.setting_text.get_rect(center=(WINDOW_SIZE[0]/2, 25))
+        screen.blit(self.setting_text,self.setting_rect)
+
+        # Wake hour slider
+        self.wake_text = pygame.font.Font(None,20).render("Waking hour", True, BLACK)
+        self.wake_rect = self.wake_text.get_rect(center=(WINDOW_SIZE[0]/2,50))
+        screen.blit(self.wake_text,self.wake_rect)
+        
+        self.info_img_wh    = pygame.image.load(INFO_ICON)
+        self.info_rect_wh = self.info_img_wh.get_rect(left=15, top=50)
+        screen.blit(self.info_img_wh, self.info_rect_wh)
+        
+        
+        pygame.draw.rect(screen, [200,200,200], (54,80,200,2))
+        pygame.draw.rect(screen, [155,155,155], (self.wh_slider_left,self.wh_slider_top,SLIDER_WIDTH,SLIDER_HEIGHT))
+        
+        self.wh_hour_text = pygame.font.Font(None,15).render(str(int(24/(200/(self.wh_slider_left-53)))), True, BLACK)
+        self.wh_hour_rect = self.wh_hour_text.get_rect(left=self.wh_slider_left, top=60)
+        screen.blit(self.wh_hour_text, self.wh_hour_rect)
+
+        self.zero_wh_text = pygame.font.Font(None,15).render("0", True, BLACK)
+        self.zero_wh_rect = self.zero_wh_text.get_rect(left=40,top=80)
+        self.tfour_wh_text= pygame.font.Font(None,15).render("24", True, BLACK)
+        self.tfour_wh_rect= self.zero_wh_text.get_rect(left=264, top=80)
+        screen.blit(self.zero_wh_text, self.zero_wh_rect)
+        screen.blit(self.tfour_wh_text, self.tfour_wh_rect)
+
+        if pygame.mouse.get_pressed()[0]:
+            mx,my = pygame.mouse.get_pos()
+
+            if mx > 54 and mx < 254 and my > self.wh_slider_top and my < self.wh_slider_top + SLIDER_HEIGHT:
+                self.wh_slider_left = mx 
+
+
+        # Not home hour slider
+        self.not_home_text = pygame.font.Font(None,20).render("Not in home hour", True, BLACK)
+        self.not_home_rect = self.not_home_text.get_rect(center=(WINDOW_SIZE[0]/2,100))
+        screen.blit(self.not_home_text,self.not_home_rect)
+        self.info_img_nh   = pygame.image.load(INFO_ICON)
+        self.info_rect_nh  = self.info_img_nh.get_rect(left=15, top=100)
+        screen.blit(self.info_img_nh, self.info_rect_nh)
+
+        # Back home hour slider
+        self.back_home_text = pygame.font.Font(None,20).render("Back Home hour", True, BLACK)
+        self.back_home_rect = self.back_home_text.get_rect(center=(WINDOW_SIZE[0]/2,170))
+        screen.blit(self.back_home_text,self.back_home_rect)
+        self.info_img_bh    = pygame.image.load(INFO_ICON)
+        self.info_rect_bh   = self.info_img_bh.get_rect(left=15, top=160)
+        screen.blit(self.info_img_bh, self.info_rect_bh)
+
+        # Sleep time slider
+        self.sleep_text = pygame.font.Font(None,20).render("Sleep time", True, BLACK)
+        self.sleep_rect = self.sleep_text.get_rect(center=(WINDOW_SIZE[0]/2,230))
+        screen.blit(self.sleep_text,self.sleep_rect)
+        self.info_img_st    = pygame.image.load(INFO_ICON)
+        self.info_rect_st   = self.info_img_st.get_rect(left=15, top=220)
+        screen.blit(self.info_img_st, self.info_rect_st)
+
+        # Temperature slider
+        self.temp_text = pygame.font.Font(None,20).render("Default Temperature", True, BLACK)
+        self.temp_rect = self.temp_text.get_rect(center=(WINDOW_SIZE[0]/2,290))
+        screen.blit(self.temp_text,self.temp_rect)
+        self.info_img_t  = pygame.image.load(INFO_ICON)
+        self.info_rect_t = self.info_img_t.get_rect(left=15, top=280)
+        screen.blit(self.info_img_t, self.info_rect_t)
+
+        # Temperature min max slider
+        self.tempmm_text = pygame.font.Font(None,20).render("Range Temperature", True, BLACK)
+        self.tempmm_rect = self.tempmm_text.get_rect(center=(WINDOW_SIZE[0]/2,350))
+        screen.blit(self.tempmm_text,self.tempmm_rect)
+        self.info_img_tmm  = pygame.image.load(INFO_ICON)
+        self.info_rect_tmm = self.info_img_t.get_rect(left=15, top=340)
+        screen.blit(self.info_img_tmm, self.info_rect_tmm)
+
+        # Laundry time
+        self.laundry_text = pygame.font.Font(None,20).render("laundry time", True, BLACK)
+        self.laundry_rect = self.laundry_text.get_rect(center=(WINDOW_SIZE[0]/2,410))
+        screen.blit(self.laundry_text,self.laundry_rect)
+        self.info_img_l   = pygame.image.load(INFO_ICON)
+        self.info_rect_l  = self.info_img_l.get_rect(left=15, top=400)
+        screen.blit(self.info_img_l, self.info_rect_l)
+
