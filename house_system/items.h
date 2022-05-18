@@ -1,3 +1,66 @@
+class CurrentData {
+  public:
+
+    int light;
+    int air_mode;
+    int sleep_hour;
+    int wake_hour; 
+    int not_home;
+    int back_hour;
+
+    int default_temperature;
+    int desired_temperature;
+    int max_temperature;
+    int min_temperature;
+
+    String tv_sentences[3] = {"CACACULO",
+                          "CULOCACA",
+                          "CARLOS GAY"};
+
+    char lcd;
+    bool presence;
+
+    //SETTERS
+    void set_light(int value){light = value;};
+    void set_air_mode(int value){air_mode = value;};
+    void set_sleep_hour(int value){sleep_hour = value;};
+    void set_wake_hour(int value){wake_hour = value;};
+    void set_not_home(int value){not_home = value;};
+    void set_back_hour(int value){back_hour = value;};
+    void set_default_temperature(int value){default_temperature = value;};
+    void set_desired_temperature(int value){desired_temperature = value;};
+    void set_max_temperature(int value){max_temperature = value;};
+    void set_min_temperature(int value){min_temperature = value;};
+
+    //GETTERS
+    int get_light(int value){return light;};
+    int get_air_mode(int value){return air_mode;};
+    int get_sleep_hour(int value){return sleep_hour;};
+    int get_wake_hour(int value){return wake_hour;};
+    int get_not_home(int value){return not_home;};
+    int get_back_hour(int value){return back_hour;};
+    int get_default_temperature(int value){return default_temperature;};
+    int get_desired_temperature(int value){return desired_temperature;};
+    int get_max_temperature(int value){return max_temperature;};
+    int get_min_temperature(int value){return min_temperature;};
+
+    
+    int get_temperature();
+    bool get_presence();
+    int get_light_intensity();
+    char get_time();
+    String get_random_tv_sentence();
+    CurrentData(){};
+  
+};
+
+int CurrentData::get_temperature(){
+  
+  
+}
+
+
+
 class Lights {  
   public: 
     int lights_threshold; 
@@ -26,9 +89,9 @@ class Air{
 class Shifter{
   public:
   
-    uint8_t air_cold_blinds_off;
-    uint8_t air_hot_blinds_off;
-    uint8_t air_off_blinds_off;
+    uint8_t air_cold_blinds_off[2];
+    uint8_t air_hot_blinds_off[2];
+    uint8_t air_off_blinds_off[2];
     
     uint8_t air_cold_blinds_up[4];
     uint8_t air_hot_blinds_up[4];
@@ -48,8 +111,7 @@ class Shifter{
     Shifter(int, int, int);
     void update_shifter_register(uint8_t);
     uint8_t get_air_blinds_data(int, int, int);
-    uint8_t get_appliance_data(int, int);
-    void set_shifter_on(int, int, int, int);
+    void set_shifter_on(int, int, int);
 
   
 };
@@ -62,50 +124,44 @@ Shifter::Shifter(int l, int d, int c){
   pin_clock = c;
   
   // B 0 hot cold sh1 sh2 sh3 sh4 0
-  air_cold_blinds_off = B00100000;
-  air_hot_blinds_off = B01000000;
-  air_off_blinds_off = B00000000;
+  air_cold_blinds_off[0] = B10100000;
+  air_cold_blinds_off[1] = B00100000;
+  
+  air_hot_blinds_off[0] = B11000000;
+  air_hot_blinds_off[1] = B01000000;
+  
+  air_off_blinds_off[0] = B10000000;
+  air_off_blinds_off[1] = B00000000;
 
-  air_cold_blinds_down[0] = B00111000;
+  air_cold_blinds_down[0] = B10111000;
   air_cold_blinds_down[1] = B00101100;
-  air_cold_blinds_down[2] = B00100110;
+  air_cold_blinds_down[2] = B10100110;
   air_cold_blinds_down[3] = B00110010;
 
-  air_hot_blinds_down[0] = B01011000;
+  air_hot_blinds_down[0] = B11011000;
   air_hot_blinds_down[1] = B01001100;
-  air_hot_blinds_down[2] = B01000110;
+  air_hot_blinds_down[2] = B11000110;
   air_hot_blinds_down[3] = B01010010;
 
-  air_cold_blinds_up[0] = B00100110;
+  air_cold_blinds_up[0] = B10100110;
   air_cold_blinds_up[1] = B00101100;
-  air_cold_blinds_up[2] = B00111000;
+  air_cold_blinds_up[2] = B10111000;
   air_cold_blinds_up[3] = B00110010;
 
-  air_hot_blinds_up[0] = B01000110;
+  air_hot_blinds_up[0] = B11000110;
   air_hot_blinds_up[1] = B01001100;
-  air_hot_blinds_up[2] = B01011000;
+  air_hot_blinds_up[2] = B11011000;
   air_hot_blinds_up[3] = B01010010;
 
-  air_off_blinds_down[0] = B00011000;
+  air_off_blinds_down[0] = B10011000;
   air_off_blinds_down[1] = B00001100;
-  air_off_blinds_down[2] = B00000110;
+  air_off_blinds_down[2] = B10000110;
   air_off_blinds_down[3] = B00010010;
 
-  air_off_blinds_up[0] = B00000110;
+  air_off_blinds_up[0] = B10000110;
   air_off_blinds_up[1] = B00001100;
-  air_off_blinds_up[2] = B00011000;
+  air_off_blinds_up[2] = B10011000;
   air_off_blinds_up[3] = B00010010;
-
-
-  // B 0 sh1 sh2 sh3 sh4 0 0 0
-  appliance_off_us[0] = B00000001;
-  appliance_off_us[1] = B00000001;
-
-  appliance_on_us[0] = B01100001;
-  appliance_on_us[1] = B00110000;
-  appliance_on_us[2] = B00011001;
-  appliance_on_us[3] = B01001000;
-  Serial.println(air_off_blinds_up[0]);
   
 }
 
@@ -123,7 +179,15 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
         return air_cold_blinds_up[iteration];
       }
       else{ // blinds off
-        return air_off_blinds_off;      
+       
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_cold_blinds_off[iteration]; 
+          }
+          else{
+            return air_cold_blinds_off[iteration-2];
+          }        
+        }     
       }
     }
     else if(blinds == 2){ // blinds down
@@ -131,11 +195,26 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
         return air_cold_blinds_down[iteration];
       }
       else{ // blinds off
-        return air_off_blinds_off;      
+        
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_cold_blinds_off[iteration];  
+          }
+          else{
+            return air_cold_blinds_off[iteration-2];
+          }        
+        }    
       }
     }
     else{ // blinds off
-      return air_cold_blinds_off;      
+      if(iteration < 4){
+        if(iteration < 2){
+          return air_cold_blinds_off[iteration];  
+        }
+        else{
+          return air_cold_blinds_off[iteration-2];
+        }        
+      }    
     }
   }
   
@@ -145,7 +224,14 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
         return air_hot_blinds_up[iteration];
       }
       else{ // blinds off
-        return air_off_blinds_off;      
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_hot_blinds_off[iteration];  
+          }
+          else{
+            return air_hot_blinds_off[iteration-2];
+          }        
+        }  
       }
     }
     else if(blinds == 2){ // blinds down
@@ -153,11 +239,25 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
         return air_hot_blinds_down[iteration];
       }
       else{ // blinds off
-        return air_off_blinds_off;      
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_hot_blinds_off[iteration];  
+          }
+          else{
+            return air_hot_blinds_off[iteration-2];
+          }        
+        }    
       }
     }
-    else{ // blinds off
-      return air_hot_blinds_off;      
+    else{ // blinds off  
+      if(iteration < 4){
+        if(iteration < 2){
+          return air_hot_blinds_off[iteration];  
+        }
+        else{
+          return air_hot_blinds_off[iteration-2];
+        }        
+      }   
     }
   }
   
@@ -166,8 +266,16 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
       if(iteration < 4){
         return air_off_blinds_up[iteration];
       }
-      else{ // blinds off
-        return air_off_blinds_off;      
+      else{ // blinds off 
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_off_blinds_off[iteration];  
+          }
+          else{
+            return air_off_blinds_off[iteration-2];
+          }        
+        }
+            
       }
     }
     else if(blinds == 2){ // blinds down
@@ -175,50 +283,32 @@ uint8_t Shifter::get_air_blinds_data(int air, int blinds, int iteration){
         return air_off_blinds_down[iteration];
       }
       else{ // blinds off
-        return air_off_blinds_off;      
+        if(iteration < 4){
+          if(iteration < 2){
+            return air_off_blinds_off[iteration];  
+          }
+          else{
+            return air_off_blinds_off[iteration-2];
+          }        
+        }     
       }
     }
     else{ // blinds off
-      return air_off_blinds_off;      
-    }
-  }  
-}
-
-uint8_t Shifter::get_appliance_data(int appliance, int iteration){
-
-  if(appliance == 1){
-    if(iteration < 4){
-      return appliance_on_us[iteration];
-    }
-    else{
       if(iteration < 4){
         if(iteration < 2){
-          return appliance_on_us[iteration];
+          return air_off_blinds_off[iteration];  
         }
         else{
-          return appliance_on_us[iteration-2];
-        }
-        
-      }
-    }
-  }
-  else{
-    if(iteration < 4){
-      if(iteration < 2){
-        return appliance_on_us[iteration];
-      }
-      else{
-        return appliance_on_us[iteration-2];
-      }
+          return air_off_blinds_off[iteration-2];
+        }        
+      }    
     }
   }  
 }
 
-void Shifter::set_shifter_on(int air, int blinds, int appliance, int iteration){
+void Shifter::set_shifter_on(int air, int blinds, int iteration){
   byte data1 = get_air_blinds_data(air, blinds, iteration);
-  uint8_t data2 = get_appliance_data(appliance, iteration);
 
-  update_shifter_register(data2);
   update_shifter_register(data1);
     
 }
@@ -278,3 +368,6 @@ void Air::power_air_on(int temp){
     analogWrite(hot_pin, 0);
   }
 }
+
+
+// ------------------- CurrentData --------------

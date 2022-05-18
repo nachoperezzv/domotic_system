@@ -1,8 +1,14 @@
 #include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
 #include "items.h"
 #include <math.h>
+#include <RTClib.h>
+
 
 #define thermistor_resis 10000
+
+// SOftware Serial
+SoftwareSerial SerialEsp(2,3); // RX / TX
 
 // Counter for shifter iterations
 int count = 0;
@@ -25,13 +31,21 @@ const int photorresistor = A1; // Analogic
 const int temp_sensor_pin = A2;
 const int echoPin = 2;
 
+// Real Time Clock
+RTC_DS3231 rtc;
+
+// Current Data
+
+CurrentData currentData = CurrentData();
+
 
 // Global variables
 const int light_threshold = 600; // Barrier that makes the led light or not
 long distanceCm = 0.0;
 
 String tv_display = "MAMAWEBO";
-int movement = tv_display.length();
+
+//int movement = tv_display.length();
 
 int default_temp = 22;
 int temp_range = 2;
@@ -61,6 +75,11 @@ void setup(){
   
   // Button interrumption
   attachInterrupt(digitalPinToInterrupt(led_button),led_button_interrupt, RISING);  
+  if (! rtc.begin()) {
+   Serial.println("No hay un módulo RTC");
+   while (1);
+   }
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
 
 void loop(){
@@ -72,6 +91,8 @@ void loop(){
   // -------------------------- LCD TV -------------------------- //
   lcd.setCursor(0,0);
   lcd.print(tv_display);
+//  lcd.setCursor(0,1);
+//  lcd.print(tv_display2);
 
   // -------------------------- TEMPERATURE  -------------------------- //
    
@@ -82,7 +103,7 @@ void loop(){
   temperatura = thermistor_get_temperature(resistencia);
   
   // -------------------------- SHIFTER  -------------------------- //
-  shifter.set_shifter_on(1,0,0, count); 
+  shifter.set_shifter_on(1,1,count); 
   count++;
   if(count >= 4){
     count = 0;
@@ -90,10 +111,14 @@ void loop(){
 
   // -------------------------- ULTRASONIC  -------------------------- // 
   // devuelve una medida bien y un 0 en la siguiente todo el rato
-  long duration = pulseIn(echoPin, HIGH, 5000);
+  long duration = pulseIn(echoPin, HIGH, 10000);
   distanceCm = duration * 10 / 292 / 2;
-  Serial.println(distanceCm);
 
+
+  // -------------------------- CLOCK  -------------------------- // 
+  DateTime now = rtc.now();
+  char hour_mins[4];
+  sprintf(hour_mins, "%02d%02d", now.hour(), now.minute());
 }
 
 
