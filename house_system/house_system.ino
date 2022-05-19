@@ -4,14 +4,19 @@
 #include <math.h>
 #include <RTClib.h>
 
-
-#define thermistor_resis 10000
-
 // SOftware Serial
-SoftwareSerial SerialEsp(2,3); // RX / TX
+// SoftwareSerial SerialEsp(2,3); // RX / TX
 
 // Counter for shifter iterations
-int count = 0;
+int count_shifter_iterations = 0;
+
+//pulse indicator
+int pulse = 0;
+
+//LCD Iterations
+int lcd_iterations_counter = 0;
+int max_lcd_iterations_threshold = 100;
+int sentence_position_counter = 16;
 
 // Lights pin numbers
 const int led_button = 3;
@@ -26,22 +31,22 @@ const int dataPin = 4; // 4 0
 // LCD pin numbers
 const int rs = 13, en = 12, d4 = 11, d5 = 10, d6 = 9, d7 = 8;
 
-// Sensors pin numbers
-const int photorresistor = A1; // Analogic
-const int temp_sensor_pin = A2;
-const int echoPin = 2;
-
-// Real Time Clock
-RTC_DS3231 rtc;
+const int photorresistor = A1;
 
 // Current Data
 
 CurrentData currentData = CurrentData();
 
 
+String sentence = currentData.get_random_tv_sentence();
+
+
+// Real Time Clock
+RTC_DS3231 rtc;
+
+
 // Global variables
 const int light_threshold = 600; // Barrier that makes the led light or not
-long distanceCm = 0.0;
 
 String tv_display = "MAMAWEBO";
 
@@ -89,63 +94,90 @@ void loop(){
   led.set_value(led_value);  
 
   // -------------------------- LCD TV -------------------------- //
-  lcd.setCursor(0,0);
-  lcd.print(tv_display);
-//  lcd.setCursor(0,1);
-//  lcd.print(tv_display2);
-
-  // -------------------------- TEMPERATURE  -------------------------- //
-   
-  float temperatura;
-  int resistencia;
- 
-  resistencia = thermistor_get_resistance(analogRead(thermistor_resis));
-  temperatura = thermistor_get_temperature(resistencia);
+  
+  
   
   // -------------------------- SHIFTER  -------------------------- //
-  shifter.set_shifter_on(1,1,count); 
-  count++;
-  if(count >= 4){
-    count = 0;
+  shifter.set_shifter_on(2,1,1,count_shifter_iterations); 
+  currentData.get_presence();
+  
+  count_shifter_iterations++;
+  if(count_shifter_iterations >= 4){
+    count_shifter_iterations = 0;
   }
 
   // -------------------------- ULTRASONIC  -------------------------- // 
-  // devuelve una medida bien y un 0 en la siguiente todo el rato
-  long duration = pulseIn(echoPin, HIGH, 10000);
-  distanceCm = duration * 10 / 292 / 2;
-
+  
 
   // -------------------------- CLOCK  -------------------------- // 
-  DateTime now = rtc.now();
-  char hour_mins[4];
-  sprintf(hour_mins, "%02d%02d", now.hour(), now.minute());
+  DateTime right_now = rtc.now();
+  
+  lcd_manager(right_now);
 }
 
-
-// --------------------------- FUNCTIONS --------------------------- //
-
-int thermistor_get_resistance(int adcval)
-{
-  // calculamos la resistencia del NTC a partir del valor del ADC
-  return (thermistor_resis * ((1023.0 / adcval) - 1));
-}
-
-
-float thermistor_get_temperature(int resistance)
-{
-  float temp;
- 
-  temp = log(resistance);
- 
-  // resolvemos la ecuacion de STEINHART-HART
-  temp = 1 / (0.001129148 + (0.000234125 * temp) + (0.0000000876741 * temp * temp * temp));
- 
-  // convertir el resultado de kelvin a centigrados y retornar
-  return temp - 273.15;
-}
 
 // --------------------------- INTERRUMPTIONS --------------------------- //
 
 void led_button_interrupt(){
   lights_on = !lights_on;  
+}
+
+void lcd_manager(DateTime right_now){
+
+  char hour_mins[4];
+  sprintf(hour_mins, "%02d:%02d", right_now.hour(), right_now.minute());
+  String time_sentence = String(hour_mins); 
+
+  String new_sentence = sentence;
+  int new_position_counter = sentence_position_counter;
+  
+  if (lcd_iterations_counter >= max_lcd_iterations_threshold){
+    lcd_iterations_counter = 0;
+    if(sentence_position_counter <= -(int)sentence.length()){
+      sentence = currentData.get_random_tv_sentence();
+      sentence_position_counter = 16;
+      new_position_counter = sentence_position_counter;
+      new_sentence = sentence.substring(0,16);
+    }
+    else if(sentence_position_counter < 0){
+      new_sentence = sentence.substring(abs(sentence_position_counter));
+      sentence_position_counter--;
+      new_position_counter = 0;
+      
+    }
+    else{
+      sentence_position_counter--;
+      new_position_counter = sentence_position_counter;
+      new_sentence = sentence.substring(0,16);
+    }
+    lcd.clear();
+    lcd.setCursor(new_position_counter,0);
+    lcd.print(new_sentence);
+    
+  }
+  lcd.setCursor(5,1);
+  lcd.print(time_sentence);
+  lcd_iterations_counter++;
+  
+}
+
+void encodeData(char* instruction){
+  
+
+}
+
+
+void decodeData(char* instruction){
+
+  int instruction_type = (int)instruction[0];
+
+  if (instruction_type == 1){
+    
+    
+  }
+  else if (instruction_type == 2){
+
+    
+  }
+
 }
