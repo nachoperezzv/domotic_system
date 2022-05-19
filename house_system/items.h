@@ -5,31 +5,55 @@
 class CurrentData {
   public:
 
-    int light;
-    int air_mode;
-    int sleep_hour;
-    int wake_hour; 
-    int not_home;
-    int back_hour;
+    int light_state = 1;
+    int television_state = 1;
+    int air_state = 2;
+    int appliance_state = 0;
+    int blinds_state = 0;
 
-    int default_temperature;
-    int desired_temperature;
-    int max_temperature;
-    int min_temperature;
+    int light = 11;
+    int television = 1;
+    int air_mode = 2;
+    int sleep_hour = 2319;
+    int wake_hour = 800; 
+    int not_home = 1500;
+    int back_hour = 1905;
+    int laundry_time = 1600;
+    int appliance = 0;
+    int blinds = 0;
+
+    int default_temperature = 24;
+    int desired_temperature = 27;
+    int max_temperature = 27;
+    int min_temperature = 21;
+
+    bool inside = false;
+    bool us_available = true;
+
+    
     //                        "123456789ABCDEFGHIJKLMNÑOPQRSTUV"
     String tv_sentences[6] = {"NACHO CUMPLE LOS 100 ANOS",
                               "BASCU TERMINA SU TFG",
                               "AURE SE CASA CON MISS FORTUNE",
                               "CARLOS SE RAPA",
                               "TEEMO ROMPE RELACIONES CON AMPI",
-                              "PC DE LA UA ENCIENDE EN <1 HORA"};
+                              "PC DE LA UA ENCIENDE ANTES DE TERMINAR LA CLASE"};
 
-    char lcd;
     bool presence;
 
     //SETTERS
     void set_light(int value){light = value;};
+    void set_blinds(int value){blinds = value;};
+    void set_appliance(int value){appliance = value;};
+    void set_television(int value){television = value;};
     void set_air_mode(int value){air_mode = value;};
+
+    void set_light_state(int value){light_state = value;};
+    void set_blinds_state(int value){blinds_state = value;};
+    void set_appliance_state(int value){appliance_state = value;};
+    void set_television_state(int value){television_state = value;};
+    void set_air_state(int value){air_state = value;};
+    
     void set_sleep_hour(int value){sleep_hour = value;};
     void set_wake_hour(int value){wake_hour = value;};
     void set_not_home(int value){not_home = value;};
@@ -38,18 +62,30 @@ class CurrentData {
     void set_desired_temperature(int value){desired_temperature = value;};
     void set_max_temperature(int value){max_temperature = value;};
     void set_min_temperature(int value){min_temperature = value;};
+    void set_laundry_time(int value){laundry_time = value;};
 
     //GETTERS
-    int get_light(int value){return light;};
-    int get_air_mode(int value){return air_mode;};
-    int get_sleep_hour(int value){return sleep_hour;};
-    int get_wake_hour(int value){return wake_hour;};
-    int get_not_home(int value){return not_home;};
-    int get_back_hour(int value){return back_hour;};
-    int get_default_temperature(int value){return default_temperature;};
-    int get_desired_temperature(int value){return desired_temperature;};
-    int get_max_temperature(int value){return max_temperature;};
-    int get_min_temperature(int value){return min_temperature;};
+    int get_light(){return light;};
+    int get_blinds(){return blinds;};
+    int get_appliance(){return appliance;};
+    int get_television(){return television;};
+    int get_air_mode(){return air_mode;};
+
+    int get_light_state(){return light_state;};
+    int get_blinds_state(){return blinds_state;};
+    int get_appliance_state(){return appliance_state;};
+    int get_television_state(){return television_state;};
+    int get_air_state(){return air_state;};
+    
+    int get_sleep_hour(){return sleep_hour;};
+    int get_wake_hour(){return wake_hour;};
+    int get_not_home(){return not_home;};
+    int get_back_hour(){return back_hour;};
+    int get_default_temperature(){return default_temperature;};
+    int get_desired_temperature(){return desired_temperature;};
+    int get_max_temperature(){return max_temperature;};
+    int get_min_temperature(){return min_temperature;};
+    int get_laundry_time(){return laundry_time;};
 
     
     int get_temperature();
@@ -57,6 +93,7 @@ class CurrentData {
     int get_time(DateTime);
     String get_random_tv_sentence();
     CurrentData(){};
+    bool is_inside(int);
   
 };
 
@@ -90,10 +127,22 @@ int CurrentData::get_presence(){
     return 2;
   }
   else{
-    return distanceCm < 15 ? 1 : 0;
+    return distanceCm < 13 ? 1 : 0;
+  } 
+}
+
+bool CurrentData::is_inside(int presence){
+
+  if(presence == 1){
+    if(us_available){
+      inside = !inside;
+    }
+    us_available = false;
   }
-  
-  
+  else{
+    us_available = true;
+  }
+  return inside; 
 }
 
 int CurrentData::get_time(DateTime right_now){
@@ -107,12 +156,16 @@ String CurrentData::get_random_tv_sentence(){
   return tv_sentences[(int)random(0,len)];  
 }
 
+// ------------------ LIGHTS ------------------ //
 
 class Lights {  
   public: 
     int lights_threshold; 
     int led_pin;
     int sensor_pin;
+
+    bool is_outside = false;
+    bool us_available = true;
   
     Lights(int, int, int);
     int get_sensor_measure();
@@ -121,17 +174,32 @@ class Lights {
   
 };
 
-class Air{
-  public:
-    int hot_pin;
-    int cold_pin;
-    int default_temp;
-    int temp_range;
 
-    Air(int, int, int, int);
-    int set_temperature(int);
-    void power_air_on(int);
-};
+Lights::Lights(int threshold, int pin, int sensor){
+  lights_threshold = threshold;
+  led_pin = pin;
+  sensor_pin = sensor;
+}
+  
+int Lights::get_sensor_measure(){
+  return analogRead(sensor_pin);
+}
+  
+int Lights::set_led_intensity(bool on){
+    
+  int measure = get_sensor_measure();
+  
+  if(on && measure > lights_threshold ){    
+    return (((float)measure-(float)lights_threshold)/((float)1000-(float)lights_threshold)) * 255;     
+  }  
+  else      
+    return 0;      
+}
+
+void Lights::set_value(int value){
+  analogWrite(led_pin, value);
+}
+
 
 class Shifter{
   public:
@@ -404,62 +472,3 @@ void Shifter::set_shifter_on(int air, int blinds, int pulse, int iteration){
   
     
 }
-
-
-// ------------------ LIGHTS ------------------ //
-
-Lights::Lights(int threshold, int pin, int sensor){
-  lights_threshold = threshold;
-  led_pin = pin;
-  sensor_pin = sensor;
-}
-  
-int Lights::get_sensor_measure(){
-  return analogRead(sensor_pin);
-}
-  
-int Lights::set_led_intensity(bool on){
-    
-  int measure = get_sensor_measure();
-  
-  if(on && measure > lights_threshold ){    
-    return (((float)measure-(float)lights_threshold)/((float)1000-(float)lights_threshold)) * 255;     
-  }  
-  else      
-    return 0;      
-}
-
-void Lights::set_value(int value){
-  analogWrite(led_pin, value);
-}
-
-
-// ------------------ AIR ------------------ //
-
-Air::Air(int pin_h, int pin_c, int temp, int range){
-  hot_pin = pin_h;
-  cold_pin = pin_c;
-  default_temp = temp;
-  temp_range = range;
-}
-
-
-int Air::set_temperature(int temp){
-  return temp * 254 / 27;
-}
-
-void Air::power_air_on(int temp){
-  if(temp < default_temp - temp_range){
-    analogWrite(hot_pin, set_temperature(abs(default_temp - temp)));
-  }
-  else if(temp > default_temp + temp_range){
-    analogWrite(cold_pin, set_temperature(abs(default_temp - temp)));
-  }
-  else{
-    analogWrite(cold_pin, 0);
-    analogWrite(hot_pin, 0);
-  }
-}
-
-
-// ------------------- CurrentData --------------
