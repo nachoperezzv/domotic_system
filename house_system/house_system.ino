@@ -4,58 +4,57 @@
 #include <math.h>
 #include <RTClib.h>
 
-// Software Serial
-// SoftwareSerial SerialEsp(2,3); // RX / TX
+// Creation of virtual port
+SoftwareSerial SerialEsp(2,3); // RX / TX
 
-// Counter for shifter iterations
+// Current Data instance
+CurrentData currentData = CurrentData();
+
+// Pins and counter for shifter iterations
 int count_shifter_iterations = 0;
-int blinds_counter = 3000;
-int blinds_threshold = 3000;
-
-//pulse indicator
-int pulse = 0;
-
-//LCD Iterations
-int lcd_iterations_counter = 0;
-int max_lcd_iterations_threshold = 100;
-int sentence_position_counter = 16;
-
-// Lights pin numbers
-const int led_button = 3;
-const int led_pin = 5; // Digital --> PWM
-
-// Shifter pins
 const int latchPin = 7; //7 1
 const int clockPin = 6; //6 2 
 const int dataPin = 4; // 4 0
 
-// LCD pin numbers
+// Blinds variables
+int blinds_counter = 0;
+int blinds_threshold = 3000;
+
+// Ultrasonic pulse indicator
+int pulse = 0;
+
+// LCD variables
+int lcd_iterations_counter = 0;
+int max_lcd_iterations_threshold = 100;
+int sentence_position_counter = 16;
 const int rs = 13, en = 12, d4 = 11, d5 = 10, d6 = 9, d7 = 8;
-
-const int photorresistor = A1;
-
-bool air_active = false;
-
-// Current Data
-CurrentData currentData = CurrentData();
-
 String sentence = currentData.get_random_tv_sentence();
+
+// Lights pin numbers
+const int led_button = 3; // Button
+const int led_pin = 5; // PWM --> LED
+const int photorresistor = A1; // Photoresistance
+const int light_threshold = 600; // Barrier that makes the led light or not
+
+// Air variables
+bool air_active = false;
 
 // Real Time Clock
 RTC_DS3231 rtc;
 
-// Global variables
-const int light_threshold = 600; // Barrier that makes the led light or not
-
-// Items declarations
+// Instances declarations
 Lights led = Lights(light_threshold, led_pin, photorresistor);
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 Shifter shifter = Shifter(latchPin, dataPin, clockPin);
 
+
+
 //----------SETUP--------------
 
+
+
 void setup(){
-  Serial.begin(9600);
+  SerialEsp.begin(9600);
   lcd.begin(16, 2);
 
   // Pines PWM y Analógicos
@@ -68,19 +67,24 @@ void setup(){
   pinMode(dataPin, OUTPUT);
   pinMode(clockPin, OUTPUT);
   
-  // Button interrumption
+  // Button interruption
   attachInterrupt(digitalPinToInterrupt(led_button),led_button_interrupt, RISING);  
+  
   if (! rtc.begin()) {
-   Serial.println("No hay un módulo RTC");
    while (1);
    }
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
 
+
+
 //-------------LOOP-------------
 
+
+
 void loop(){
-  if (Serial.available()){
+  
+  if (SerialEsp.available()){
     decodeData();
   } 
 
@@ -88,22 +92,39 @@ void loop(){
 
   int current_time = currentData.get_time(right_now);
 
+  int back_hour = currentData.get_back_hour();
+  int desired_temperature = currentData.get_desired_temperature();
+  int default_temperature = currentData.get_default_temperature();
+  int min_temperature = currentData.get_min_temperature();
+  int max_temperature = currentData.get_max_temperature();
+  int appliance = currentData.get_appliance();
+  int blinds = currentData.get_blinds();
+  int wake_hour = currentData.get_wake_hour();
+  int sleep_hour = currentData.get_sleep_hour();
+  int laundry_time = currentData.get_laundry_time();
+  int television = currentData.get_television();
+  
+
+
   // ---------- AIR ------------
+
   
   int air_number = 0, air_state = currentData.get_air_mode(); 
   int temperature = round(currentData.get_temperature());
 
+  
+  // Creation of a pulse to read from ultrasonic sensor
   shifter.set_shifter_on(currentData.get_air_state(),currentData.get_blinds_state(),1,count_shifter_iterations); 
   shifter.set_shifter_on(currentData.get_air_state(),currentData.get_blinds_state(),0,count_shifter_iterations); 
 
   int presence = currentData.get_presence();
   
   if(air_state == 1){ // Manual
-    if(currentData.get_desired_temperature() < temperature){
+    if(desired_temperature < temperature){
       air_number = 1;
       currentData.set_air_state(1);
     }
-    else if(currentData.get_desired_temperature() > temperature){
+    else if(desired_temperature > temperature){
       air_number = 2;
       currentData.set_air_state(2);
     }
@@ -112,24 +133,22 @@ void loop(){
       currentData.set_air_state(0);
     }
   }
-  else if(air_state == 2){
+  else if(air_state == 2){ // Automatic
 
-    if(  (current_time <= currentData.get_back_hour() && current_time >= (currentData.get_back_hour()-100)) ||  ((current_time <= currentData.get_not_home() || current_time >= (currentData.get_back_hour()-100)) && currentData.is_inside(presence))){ // Esto quiere decirqueen teoria estas en casa
-      
-      if(temperature < currentData.get_min_temperature() || temperature > currentData.get_max_temperature() || air_active){
+    if((current_time <= back_hour && current_time >= (back_hour-100)) ||  ((current_time <= currentData.get_not_home() || current_time >= (back_hour-100)) && currentData.is_inside(presence))){ // User in home 
+      if(temperature < min_temperature || temperature > max_temperature || air_active){
         air_active = true;
       }
       else{
         air_number = 0;
         currentData.set_air_state(0);
       }
-  
       if(air_active){
-        if(currentData.get_default_temperature() < temperature){
+        if(default_temperature < temperature){
           air_number = 1;
           currentData.set_air_state(1);
         }
-        else if(currentData.get_default_temperature() > temperature){
+        else if(default_temperature > temperature){
           air_number = 2;
           currentData.set_air_state(2);
         }
@@ -138,10 +157,9 @@ void loop(){
           air_active = false;
           currentData.set_air_state(0);
         }
-      }
-                
+      }         
     }
-    else{
+    else{ // Shut down
       air_number = 0;
       air_active = false;
       currentData.set_air_state(0);
@@ -151,66 +169,66 @@ void loop(){
     air_number = 0;
   }
 
+
   // ----------------APPLIANCE-----------
-  int appliance_number = 0;
-  if(currentData.get_appliance() == 1 || (current_time >= currentData.get_laundry_time() && current_time <= currentData.get_laundry_time()+30 )){
-    appliance_number = 1;
+
+  
+  int appliance_blinds_number = 0;
+  if(appliance == 1 || (current_time >= wake_hour && current_time <= wake_hour+30 )){
+    appliance_blinds_number = 1;
     currentData.set_appliance(1);
     currentData.set_appliance_state(1);
   }
   else{
-    appliance_number = 0;
+    appliance_blinds_number = 0;
     currentData.set_appliance(0);
     currentData.set_appliance_state(0);
   }
 
   
 
-  // ----BLINDS
+  // --------------BLINDS---------------
 
 
   
   right_now = rtc.now();
-  int blinds_number = 0;
-  //Serial.println(blinds_counter);
   
-  if( current_time >= currentData.get_wake_hour() && current_time < currentData.get_wake_hour()+5 && blinds_counter < blinds_threshold){
-    blinds_number = 1;
+  if( current_time >= wake_hour && current_time < wake_hour+5 && blinds_counter < blinds_threshold){
+    appliance_blinds_number = 1;
     currentData.set_blinds_state(1);
     blinds_counter++;
   }
-  else if(current_time >= currentData.get_sleep_hour() && current_time < currentData.get_sleep_hour()+5 && blinds_counter > 0){
-    blinds_number = 2;
+  else if(current_time >= wake_hour && current_time < wake_hour+5 && blinds_counter > 0){
+    appliance_blinds_number = 2;
     currentData.set_blinds_state(2);
     blinds_counter--;
   }
-  else if(currentData.get_blinds() == 1 && blinds_counter < blinds_threshold){
-    blinds_number = 1;
+  else if(blinds == 1 && blinds_counter < blinds_threshold){
+    appliance_blinds_number = 1;
     currentData.set_blinds_state(1);
     blinds_counter++;
   }
-  else if(currentData.get_blinds() == 2 && blinds_counter > 0){
-    blinds_number = 2;
+  else if(blinds == 2 && blinds_counter > 0){
+    appliance_blinds_number = 2;
     currentData.set_blinds_state(2);
     blinds_counter--;
   }
   else{
-    blinds_number = 0;
+    appliance_blinds_number = 0;
     currentData.set_blinds_state(0);
   }
  
   
-  shifter.set_shifter_on(air_number,blinds_number,1,count_shifter_iterations); 
-  shifter.set_shifter_on(air_number,blinds_number,0,count_shifter_iterations); 
+  shifter.set_shifter_on(air_number,appliance_blinds_number,1,count_shifter_iterations); 
+  shifter.set_shifter_on(air_number,appliance_blinds_number,0,count_shifter_iterations); 
   count_shifter_iterations++;
   if(count_shifter_iterations >= 4){
     count_shifter_iterations = 0;
   }
 
   
+  // -------------LIGHTS------------------
 
-  
-  // LIGHTS
   
   presence = currentData.get_presence();
 
@@ -227,10 +245,10 @@ void loop(){
   }
 
   
-  // TELEVISION
+  // ---------------TELEVISION--------------
 
   if (currentData.is_inside(presence)){
-    if (currentData.get_television()){
+    if (television){
       lcd.display();
       lcd_manager(right_now);
       currentData.set_television_state(1);
@@ -245,16 +263,18 @@ void loop(){
     currentData.set_television_state(0);
   }
   
-  
+  encodeData();
 }
 
 
-// --------------------------- INTERRUMPTIONS --------------------------- //
+// --------------------------- FUNCTIONS --------------------------- //
 
+// Button interruption
 void led_button_interrupt(){
   currentData.set_light(!currentData.get_light());  
 }
 
+// LCD function
 void lcd_manager(DateTime right_now){
 
   char hour_mins[4];
@@ -305,12 +325,12 @@ void encodeData(){
   message += String(currentData.get_appliance_state());
   message += String(currentData.get_blinds_state());
   
-  Serial.print(message);
+  SerialEsp.print(message);
 }
 
 void decodeData(){
 
-  String instruction = Serial.readString();
+  String instruction = SerialEsp.readString();
 
   int instruction_type = instruction.substring(0,1).toInt();
 
@@ -332,5 +352,5 @@ void decodeData(){
     currentData.set_max_temperature(instruction.substring(21,23).toInt());
     currentData.set_laundry_time(instruction.substring(23,27).toInt());   
   }
-  encodeData();
+  
 }
