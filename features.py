@@ -1,4 +1,6 @@
 
+from ctypes.wintypes import DOUBLE
+import sys
 import pygame, random, json, time
 import urllib.error, urllib.request 
 
@@ -226,7 +228,90 @@ class CurrentWeather():
             self.its_day = True
         else:
             self.its_day = False
+
+class ForecastWeather():
+    def __init__(self):
+        # Initializing the attributes of the class
         
+        self.data = []
+        self.dt = []
+        self.min_temp = []
+        self.max_temp = []
+        self.icon = []
+
+        self.get_weather_info()  
+    
+    def __calling_the_API(self):
+        
+        self.req    = urllib.request.Request(API2)
+        self.resp   = urllib.request.urlopen(self.req)
+        self.info   = json.loads(self.resp.read().decode('utf-8'))
+        self.resp.close()
+
+    def get_weather_info(self):   
+        # Calling the API
+        self.__calling_the_API()
+        
+        # Getting info from the JSON response of the API
+        
+        try: 
+            self.data = self.info['daily'][1:6]
+        except: pass
+
+        try:
+            for d in self.data:
+                day = datetime.utcfromtimestamp(d['dt'])
+                self.dt.append(day.strftime("%d/%m"))
+        except: pass
+
+        try:
+            for d in self.data:
+                self.min_temp.append(int(d['temp']['min']) - 273)
+        except: pass
+
+        try:
+            for d in self.data:
+                self.max_temp.append(int(d['temp']['max']) - 273)
+        except: pass    
+
+        try:
+            for d in self.data:
+                self.icon.append(d['weather'][0]['icon'])
+        except: pass    
+    
+
+class REDataAPI():
+    def __init__(self):
+        self.prices = []
+
+        self.get_data_info()
+
+    def __calling_API(self):
+        self.req    = urllib.request.Request(API3_url)
+        self.resp   = urllib.request.urlopen(self.req)
+        self.info   = json.loads(self.resp.read().decode('utf-8'))
+        self.resp.close()
+
+        self.prices.clear()
+        for k in self.info.keys():
+            self.prices.append(self.info[k]['price'])
+
+    
+    def get_data_info(self):
+        self.__calling_API()
+
+    
+    def get_cheapest_in_range(self,range_min, range_max):
+        cheapest    = sys.float_info.max
+        hour        = 0
+
+        for i in range(range_min,range_max):
+            if self.prices[i] < cheapest:
+                cheapest,hour = self.prices[i],i
+        
+        return cheapest, hour
+
+
 
 class Button:
     def __init__(self,text,pos,width,height,elevation,font, color_on, color_off):
@@ -394,8 +479,68 @@ class WeatherWindow():
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
-    def print_weather_window(self, screen, functions):
+    def print_weather_window(self, screen, functions, cw, fw, rain):
+        
+        self.do_weather_simulations(screen, cw, fw, rain)
         self.go_back_button.draw(screen, functions[0])
+
+
+
+    def do_weather_simulations(self, screen, cw, fw, rain):
+       
+        rect = pygame.draw.rect(screen,HIPER_LIGHT_BLUE, (BTN_WEATHER_POS[0], BTN_WEATHER_POS[1], BTN_WEATHER_WIDTH,BTN_WEATHER_HEIGHT))
+
+        offset = 15
+
+        location_text = pygame.font.Font(None,30).render(str(cw.name) + ", " + str(cw.country), True, WHITE)
+        location_rect = location_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 0*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(location_text,location_rect)
+
+        temp_text = pygame.font.Font(None,50).render(str(cw.temp) + "ºC", True, WHITE)
+        temp_rect = temp_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,1*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(temp_text,temp_rect)
+        
+        description_text = pygame.font.Font(None,30).render(str(cw.description), True, WHITE)
+        description_rect = description_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,2*WEATHER_WINDOW_HEIGHT/5 + offset))
+        screen.blit(description_text,description_rect)
+
+        text = str("max: ")  + str(cw.temp_max) + "º  " + "min: " + str(cw.temp_min) + "º"
+        temp_minmax_text = pygame.font.Font(None,20).render(text, True, WHITE)
+        temp_minmax_rect = temp_minmax_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2,3*WEATHER_WINDOW_HEIGHT/5 + 5))
+        screen.blit(temp_minmax_text,temp_minmax_rect)
+
+        time_text = pygame.font.Font(None,30).render(str(cw.time), True, WHITE)
+        time_rect = time_text.get_rect(center=(WEATHER_WINDOW_WIDTH/2, 4*WEATHER_WINDOW_HEIGHT/5 + 5))
+        screen.blit(time_text, time_rect) 
+
+        forecast_text = pygame.font.Font(None,30).render("Day           Forecast", True, WHITE)
+        forecast_rect = forecast_text.get_rect(left=60, top=160)
+        screen.blit(forecast_text,forecast_rect)
+
+        pygame.draw.line(screen,GREY,[30,185],[284,185],3)
+
+        begin = 170
+        day_size = 60
+        for i in range(len(fw.data)):
+            date_text = pygame.font.Font(None,30).render(str(fw.dt[i]), True, WHITE)
+            date_rect = date_text.get_rect(left=20, top=(begin + i*day_size + 30))
+            screen.blit(date_text, date_rect)
+
+            icon_img = pygame.image.load(WEATHER_ICON_PATH + fw.icon[i] + ".png")
+            icon_rect = icon_img.get_rect(left=date_rect.right+30, top=(begin + i*day_size +18))
+            screen.blit(icon_img, icon_rect)
+
+            temp_min_text = pygame.font.Font(None,20).render(str("Min: ") + str(fw.min_temp[i]) + str("ºC"), True, WHITE)
+            temp_min_rect = temp_min_text.get_rect(left=160, top=(begin + i*day_size + 30))
+
+            temp_max_text = pygame.font.Font(None,20).render(str("Max: ") + str(fw.max_temp[i]) + str("ºC"), True, WHITE)
+            temp_max_rect = temp_max_text.get_rect(left=235, top=(begin + i*day_size + 30)) 
+
+            screen.blit(temp_min_text,temp_min_rect)
+            screen.blit(temp_max_text,temp_max_rect)
+
+
+        
 
 
 class LightsWindow():
@@ -636,6 +781,8 @@ class Slider():
         self.slider_pos = slider_pos
         self.division = division
         self.offset = offset
+        if info_pos != None:
+            self.info_pos = info_pos    
 
         self.text = pygame.font.Font(None,tam_text).render(text, True, text_color)
         self.rect = self.text.get_rect(center=(text_pos[0],text_pos[1]))
@@ -668,17 +815,88 @@ class Slider():
         self.screen.blit(self.mark_text, self.mark_rect)         # Print the mark indicator  - slider pos
         self.screen.blit(self.zero_wh_text, self.zero_wh_rect)   # Print the left indicator  - limit
         self.screen.blit(self.tfour_wh_text, self.tfour_wh_rect) # Print the right indicator - limit
-
-        if pygame.mouse.get_pressed()[0]:
-            mx,my = pygame.mouse.get_pos()
-
+        
+        mx,my = pygame.mouse.get_pos()
+        if pygame.mouse.get_pressed()[0]:       
             if mx > self.bar_pos[0] and mx < (self.bar_pos[0]+self.bar_width) and my > self.slider_pos[1] and my < self.slider_pos[1] + self.slider_height:
                 self.mark = mx 
+                
+
+    def print_info(self, text_info, text_info2=None, text_info3=None, downside=False):
+        mx,my = pygame.mouse.get_pos()
+        y_pos_mul = 0
+        x_val = 5
+        y_val = 10
+        if downside:
+            y_val = -25
+            text = pygame.font.Font(None,15).render(text_info, True, BLACK)
+            text_rect = text.get_rect(left=self.info_pos[0] + x_val ,top=self.info_pos[1] - y_val + y_pos_mul*10)
+
+            if text_info2 != None:
+                y_pos_mul = y_pos_mul +  1
+                text2 = pygame.font.Font(None,15).render(text_info2, True, BLACK)
+                text_rect2 = text2.get_rect(left=self.info_pos[0] + x_val,top=self.info_pos[1] - y_val + y_pos_mul*10)
+                
+
+            if text_info3 != None:
+                y_pos_mul = y_pos_mul +  1
+                text3 = pygame.font.Font(None,15).render(text_info3, True, BLACK)
+                text_rect3 = text3.get_rect(left=self.info_pos[0] + x_val,top=self.info_pos[1] - y_val + y_pos_mul*10)
+                
+
+            
+
+        else:
+            if text_info3 != None:
+                text3 = pygame.font.Font(None,15).render(text_info3, True, BLACK)
+                text_rect3 = text3.get_rect(left=self.info_pos[0] + x_val,bottom=self.info_pos[1] - y_val - y_pos_mul*10)
+                y_pos_mul = y_pos_mul +  1
+
+            if text_info2 != None:
+                text2 = pygame.font.Font(None,15).render(text_info2, True, BLACK)
+                text_rect2 = text2.get_rect(left=self.info_pos[0] + x_val,bottom=self.info_pos[1] - y_val - y_pos_mul*10)
+                y_pos_mul = y_pos_mul +  1
+
+
+            text = pygame.font.Font(None,15).render(text_info, True, BLACK)
+            text_rect = text.get_rect(left=self.info_pos[0] + x_val ,bottom=self.info_pos[1] - y_val - y_pos_mul*10)
+
+
+        info_rect = text_rect.copy()
+        info_rect.top = info_rect.top - 5
+        info_rect.height = info_rect.height + 10
+        info_rect.left = info_rect.left - 5
+        info_rect.width = info_rect.width + 10
+
+        if text_info2 != None:
+            info_rect.height = info_rect.height + text_rect2.copy().height
+
+        if text_info3 != None:
+            info_rect.height = info_rect.height + text_rect3.copy().height
+
+
+        if mx > self.info_pos[0] and mx < self.info_pos[0] + 15 and my > self.info_pos[1] and my < self.info_pos[1] + 15:
+            
+            pygame.draw.rect(self.screen, WHITE, info_rect)
+            if not downside:
+                pygame.draw.polygon(self.screen, WHITE, [(self.info_pos[0]+x_val,self.info_pos[1]-y_val),(self.info_pos[0]+x_val,self.info_pos[1]),(self.info_pos[0]+15,self.info_pos[1]-y_val) ])
+            else:
+                pygame.draw.polygon(self.screen, WHITE, [(self.info_pos[0]+x_val,self.info_pos[1]-y_val),(self.info_pos[0]+x_val,self.info_pos[1]+15),(self.info_pos[0]+15,self.info_pos[1]-y_val) ])
+
+
+            self.screen.blit(text,text_rect)
+            if text_info2!= None:
+                self.screen.blit(text2,text_rect2)
+            if text_info3 != None:
+                self.screen.blit(text3,text_rect3)
+        
+
+            
 
 
 class SettingsWindow():
     def __init__(self, screen):
-        # Button for going back to main window
+        # Button for going back to main windowNo documentati
         self.go_back_button         = Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
         self.send_setting_button    = Button("Save", BTN_SEND_DATA_POS, BTN_SEND_DATA_WIDTH, BTN_SEND_DATA_HEIGHT,BTN_ELEVATION, pygame.font.Font(None,20), SUPER_LIGHT_BLUE, LIGHT_BLUE)       
 
@@ -737,10 +955,19 @@ class SettingsWindow():
         self.nh_slider.draw()
         self.bh_slider.draw()
         self.st_slider.draw()
-        self.st_slider.draw()
         self.t_slider.draw()
         self.trm_slider.draw()
         self.trM_slider.draw()
         self.lt_slider.draw()
+
+        self.wh_slider.print_info("Select the hour when you usually get up",downside=True)
+        self.nh_slider.print_info("Select the hour when you usually leave home")
+        self.bh_slider.print_info("Select the hour when you usually get back home")
+        self.st_slider.print_info("Select the hour when you usually go to bed")
+        self.t_slider.print_info("Select the home desired temperature by default")
+        self.trm_slider.print_info("Select the minimum limit temperature which", text_info2="should not be passed", downside=True)
+        self.trM_slider.print_info("Select the maximum limit temperature which", text_info2="should not be passed")
+        self.lt_slider.print_info("Select the hour ranges when you usually would", text_info2="set the laundry on")
+
 
 

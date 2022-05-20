@@ -1,6 +1,8 @@
 from features import *
 from tramas import *
 from lib import *
+import serial
+arduino = serial.Serial('/dev/ttyACM0', 9600)
 
 from threading import Thread
 
@@ -20,10 +22,12 @@ pygame.display.set_icon(pygame.image.load(WINDOW_ICON))
 # ---------------------------------------
 DoIt =  True
 
-# ----------------------
-# Initializing the API |
-# ----------------------
+# -----------------------
+# Initializing the APIS |
+# -----------------------
 cw = CurrentWeather()   # This is the call for Current weather API
+fw = ForecastWeather()  # This is the call for Forecast weather API
+re = REDataAPI()
 
 # -------------------------------------
 # Initializing the items of the house |
@@ -90,7 +94,7 @@ class TCPIPconnection():
  
 # tcpip = TCPIPconnection()
 # tcpip.connect(IP,PORT)
-tcpip = TCPIPconnection()
+# tcpip = TCPIPconnection()
 
 # ---------------------------------
 # Creating the different windows  |
@@ -204,14 +208,16 @@ for i in range(DROP_NUMBER):
 start   = time.time()
 end     = start
 
+start2  = time.time()
+end2    = start2
 
 # -------------------------------------
 # Infinite loop that controls the APP |
 # -------------------------------------
 while DoIt:
-    t = Thread(target=tcpip.communicate(), )
-    t.setDaemon = True
-    t.start()
+    # t = Thread(target=tcpip.communicate(), )
+    # t.setDaemon = True
+    # t.start()
 
     # Handling the events - Stop the app
     for event in pygame.event.get():
@@ -225,11 +231,19 @@ while DoIt:
     if (end-start) >= TIMESTAMP:        
         # This calls the OpenWeather API and get the information that is required
         cw.get_weather_info()
+        fw.get_weather_info()
 
         # Let´s restart the timer so it does another call to the API in the selected timestamp
         start   = time.time()
         end     = start
-        
+
+    if (end2-start2) >= TIMESTAMP:
+        re.get_data_info()
+
+        # Let's restart the timer so it does another call to the API in the selected timestamp
+        start2  = time.time()
+        end2    = start2
+      
     # Checking which window we have to print, but first we fill the background with a default color
     screen.fill(HIPER_LIGHT_BLUE)
 
@@ -240,7 +254,7 @@ while DoIt:
     if current_screen == 0:
         main_window.print_main_window(screen, main_functions, cw, rain)
     elif current_screen == 1:
-        weather_window.print_weather_window(screen, weather_functions)
+        weather_window.print_weather_window(screen, weather_functions, cw, fw, rain)
     elif current_screen == 2:
         trama = light_window.print_lights_window(screen, lights_functions, items)
         # print(trama)
@@ -258,7 +272,7 @@ while DoIt:
     pygame.display.flip()
 
 # Closing the socket
-tcpip.close()
+# tcpip.close()
 
 # Closing the app
 pygame.quit()

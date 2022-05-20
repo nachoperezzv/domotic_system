@@ -63,7 +63,8 @@ DROP_VELOCITY       =   [DROP_FAST, DROP_SLOW, DROP_VERY_SLOW]
 
 
 # Time Variables
-TIMESTAMP           =   90 #secs
+TIMESTAMP           =   90      #seconds
+TIMESTAMP           =   3600    #seconds
 
 # API Variables 
 API_url             = "https://api.openweathermap.org/data/2.5/weather?"
@@ -71,7 +72,15 @@ API_key             = "&appid=7e529a7df215e65c222ec1f24c8fe80c"
 API_city            = "&q=Alicante,ES"
 API_units           = "&units=metric" 
 
+API2_url            = "https://api.openweathermap.org/data/2.5/onecall?"
+API2exclude         = "&exclude=current,minutely,hourly,alerts"
+ALC_lat             = "lat=38.3452"
+ALC_lon             = "&lon=-0.481006"
+
+API3_url            = "https://api.preciodelaluz.org/v1/prices/all?zone=PCB"
+
 API                 = API_url + API_city + API_units + API_key
+API2                = API2_url + ALC_lat + ALC_lon + API2exclude + API_key
 
 VALID_CLOUD_RATE    = 30 #%
 VALID_RAIN_RATE     = 1
