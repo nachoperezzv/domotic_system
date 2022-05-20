@@ -229,7 +229,7 @@ class CurrentWeather():
         
 
 class Button:
-    def __init__(self,text,pos,width,height,elevation,font, color_on, color_off):
+    def __init__(self,text,pos,width,height,elevation,font, color_on, color_off, flip=None, text_color='#FFFFFF', border_radius=6):
     #Core attributes 
         self.pressed = False
         self.elevation = elevation
@@ -237,6 +237,7 @@ class Button:
         self.original_y_pos = pos[1]
         self.color_on = color_on
         self.color_off = color_off
+        self.border_radius = border_radius
 
         # top rectangle 
         self.top_rect = pygame.Rect(pos,(width,height))
@@ -246,8 +247,13 @@ class Button:
         self.bottom_rect = pygame.Rect(pos,(width,height))
         self.bottom_color = '#354B5E'
         #text
-        self.text_surf = font.render(text,True,'#FFFFFF')
+        self.text_surf = font.render(text,True,text_color)
         self.text_rect = self.text_surf.get_rect(center = self.top_rect.center)
+        
+        if not flip == None:
+            if flip == True:
+                self.text_surf = pygame.transform.flip(self.text_surf, flip_x = False, flip_y=True)
+                #self.text_rect = pygame.transform.flip(self.text_rect, flip_x = False, flip_y=True)
 
     def draw(self, screen, function):
     # elevation logic 
@@ -257,8 +263,8 @@ class Button:
         self.bottom_rect.midtop = self.top_rect.midtop
         self.bottom_rect.height = self.top_rect.height + self.dynamic_elecation
 
-        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 6)
-        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 6)
+        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = self.border_radius)
+        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = self.border_radius)
         screen.blit(self.text_surf, self.text_rect)
         self.check_click(function)
 
@@ -304,20 +310,66 @@ class WaterDrop():
 # This is the class that will save the state of each item connected in the house
 class Items():
 
-    # Default temperature
-    default_temperature = 21
-    blind_top = 15
-
     def __init__(self):
+
+        # Home lights and appliances
         self.led        = 0
         self.tv         = 0
-        self.air        = [21,0] # First value is to check temperature the air is working at, second if it's on or off
+        self.air        = [0,21] 
+                            # Recive:
+                            # [0]           [1]
+                            # 0 - Off       Temp
+                            # 1 - Cold
+                            # 2 - Hot
         self.appliance  = 0
-        self.blind      = [0,0] # First value is to check the height the blinds are at, second is to known it's 
+        self.blind      = 0 
+                            # 0 Off
+                            # 1 Up
+                            # 2 Down 
+
+        self.air_onoff      = 0
+
+        self.air_mode_ma    = 0
+                            # 0 means MANUAL
+                            # 1 means AUTOMATIC
+        self.air_mode_ch    = 0
+                            # 0 means COLD
+                            # 1 means HOT
+
+        # Home settings
+        self.wake_hour      = "0000"
+        self.no_home_time   = "0000"
+        self.back_home_hour = "0000"
+        self.sleep_time     = "0000"
+        self.temperature    = "00"
+        self.temperature_m  = "15"
+        self.temperature_M  = "30"
+        self.laundry_time_m = "0000"
+        self.laundry_time_M = "2400"
+        #self.laundry_time   = 
 
     def get_trama(self):
-        t = str(int(self.led))+str(int(self.tv))+str(int(self.air[1]))+str(int(self.appliance))+str(int(self.blind[1]))
+        t = (
+            str(int(1)) + 
+            str(int(self.led)) + 
+            str(int(self.tv)) + 
+            str(int(self.air_mode_ma + 1)) + str(int(self.air[1])) +
+            str(int(self.appliance)) + 
+            str(int(self.blind))
+        )
         return t  
+    
+    def get_trama_settings(self):
+        ts = (
+            str(int(2)) + 
+            str(self.wake_hour) + str("00") + 
+            str(self.no_home_time) + str("00") +
+            str(self.back_home_hour) + str("00") + 
+            str(self.sleep_time) + str("00") +
+            str(self.temperature) + str(self.temperature_m) + str(self.temperature_M) +
+            str(self.laundry_time_m) + str("00") + str(self.laundry_time_M) + str("00")         
+        )
+        return ts
 
 
 # This is the class for the main window. It contais the buttons that fill the window and the functions that will print them. The simulation of the weather is also defined here. 
@@ -423,17 +475,21 @@ class LightsWindow():
         mx, my = pygame.mouse.get_pos()
         if mx > 240 and mx < 260 and my > 225 and my < 245: 
             mouse_state = pygame.mouse.get_pressed()
+            last_mouse_state += 1
             if mouse_state[0] == True and last_mouse_state > 25:
                 if items.led == 1:
                     items.led = 0
                 elif items.led == 0:
                     items.led = 1
                 last_mouse_state = 0
-                tr = str(1) + items.get_trama()
+                tr = items.get_trama()
                 return tr
-            last_mouse_state += 1
+            else:
+                tr = str(int(0))
+                return tr
+            
         else:
-            tr = str(0)
+            tr = str(int(0))
             return tr
     
     def print_indicator(self,screen, items):
@@ -465,16 +521,33 @@ class TVWindow():
         screen.blit(self.tv_plan_img, self.tv_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        self.check_tv_status(items)
+        tr = self.check_tv_status(items)
         self.print_tv_indicator(screen,items)
         self.do_tv_simulation(screen, items)
-    
+
+        return tr
+
     def check_tv_status(self, items):
+        global last_mouse_state
         mx, my = pygame.mouse.get_pos()
-        if mx >35 and mx < 85 and my > 270 and my < 400:
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    items.tv = not items.tv
+        if mx > 35 and mx < 85 and my > 270 and my < 400: 
+            mouse_state = pygame.mouse.get_pressed()
+            last_mouse_state += 1
+            if mouse_state[0] == True and last_mouse_state > 25:
+                if items.tv == 1:
+                    items.tv = 0
+                elif items.tv == 0:
+                    items.tv = 1
+                last_mouse_state = 0
+                tr = items.get_trama()
+                return tr
+            else:
+                tr = str(int(0))
+                return tr
+            
+        else:
+            tr = str(int(0))
+            return tr
 
     def print_tv_indicator(self, screen, items):
         if items.tv == True:
@@ -496,44 +569,102 @@ class AirWindow():
         # Button for going back to main window
         self.go_back_button =   Button("<-", BTN_GO_BACK_POS, BTN_GO_BACK_WIDTH, BTN_GO_BACK_HEIGHT, BTN_ELEVATION, pygame.font.Font(None,15),SUPER_LIGHT_BLUE,LIGHT_BLUE)
 
+        # Air Mode and up down temperature
+        self.on_mode        = Button("ON", BTN_AIR_ON_POS, BTN_AIR_ON_WIDTH, BTN_AIR_ON_HEIGHT, 0,pygame.font.Font(None,20), GREY, GREY, border_radius=0)
+        self.off_mode       = Button("OFF", BTN_AIR_OFF_POS, BTN_AIR_OFF_WIDTH, BTN_AIR_OFF_HEIGHT, 0, pygame.font.Font(None,20), GREY, GREY, border_radius=0)
+        self.manual_mode    = Button("MAN", BTN_AIR_MAN_POS, BTN_AIR_MAN_WIDTH, BTN_AIR_MAN_HEIGHT, 0, pygame.font.Font(None,20), GREY, GREY, border_radius=0)
+        self.automatic_mode = Button("AUTO", BTN_AIR_AUTO_POS, BTN_AIR_AUTO_WIDTH, BTN_AIR_AUTO_HEIGHT, 0, pygame.font.Font(None,20), GREY, GREY, border_radius=0)
+
+        # Up and down temp
+        self.air_up         = Button("^", BTN_AIR_UP_POS, BTN_AIR_UP_WIDTH, BTN_AIR_UP_HEIGHT, 0, pygame.font.Font(None,30), GREY, GREY, border_radius=0)
+        self.air_down       = Button("^", BTN_AIR_DOWN_POS, BTN_AIR_DOWN_WIDTH, BTN_AIR_DOWN_HEIGHT, 0, pygame.font.Font(None,30), GREY, GREY, flip=True, border_radius=0)
+
         # Setting Air plan
         self.air_plan_img   = pygame.image.load(AIR_WINDOW_BG)
         self.air_plan_rect  = self.air_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
     def print_air_window(self, screen, functions, items): 
+        # Printing Go back button
         screen.blit(self.air_plan_img, self.air_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        self.check_air_status(items)
+        # Checking the air button
+        #tr = self.check_air_status(items)
+
+        # Checking if we print ON or OFF button
+        if items.air[0] == 0:   
+            self.on_mode.draw(screen,functions[1])
+        elif not items.air[0] == 0:
+            self.off_mode.draw(screen,functions[1])
+        
+        # Checking if we print MAN or AUTO button
+        if items.air_mode_ma == 0:
+            self.automatic_mode.draw(screen,functions[2])
+        elif items.air_mode_ma == 1:
+            self.manual_mode.draw(screen,functions[2])
+
+        # Printing up down temperature
+        self.air_up.draw(screen,functions[3])
+        self.air_down.draw(screen,functions[4])
+        
+        # Printing temperature text
+        pygame.draw.rect(screen, GREY, (194,312,40,60), border_radius=0)
+        temp_text = pygame.font.Font(None,25).render(str(items.air[1]), True, WHITE)
+        temp_rect = temp_text.get_rect(left=207,top=332)
+        screen.blit(temp_text,temp_rect)
+
+        # Printing separation
+        pygame.draw.line(screen,DARK_GREY,(125,341),(170,341),2)
+
         self.print_air_indicator(screen, items)
         self.do_air_simulation(screen, items)
 
+        #return tr
+
     def check_air_status(self, items):
+        global last_mouse_state
         mx, my = pygame.mouse.get_pos()
-        if mx > 130 and mx < 165 and my > 390 and my < 430:
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    items.air[1] = not items.air[1]
+        if (
+            (mx > 130 and mx < 165 and my > 390 and my < 430) or 
+            (items.air_onoff == 1)
+            ): 
+            mouse_state = pygame.mouse.get_pressed()
+            last_mouse_state += 1
+            if mouse_state[0] == True and last_mouse_state > 25:
+                if items.air[0] == 1:
+                    items.air[0] = 0
+                elif items.air[0] == 0:
+                    items.air[0] = 1
+                last_mouse_state = 0
+                tr = items.get_trama()
+                return tr
+            else:
+                tr = str(int(0))
+                return tr
+            
+        else:
+            tr = str(int(0))
+            return tr
     
     def print_air_indicator(self,screen, items):
-        if items.air[1] == True:
-            air_text = pygame.font.Font(None, 20).render("Air On", True, [50,250,50])
+        if items.air[0] == 0:
+            air_text = pygame.font.Font(None, 20).render("Air Off", True, RED)
             air_rect = air_text.get_rect(left=130, top=380)
-        else:
-            air_text = pygame.font.Font(None, 20).render("Air Off", True, [250,50,50])
+        elif items.air[0] == 1:
+            air_text = pygame.font.Font(None, 20).render("Air On - COLD", True, GREEN)
+            air_rect = air_text.get_rect(left=130, top=380)
+        elif items.air[0] == 2:    
+            air_text = pygame.font.Font(None, 20).render("Air On - HOT", True, GREEN)
             air_rect = air_text.get_rect(left=130, top=380)
 
         screen.blit(air_text, air_rect)
 
     def do_air_simulation(self,screen, items):
-        if items.air[1] == True:                                        # Air on
-            if items.air[0] < items.default_temperature:                # Cold air
-                pygame.draw.circle(surface=screen, color=[50,50,250], center=(140,400), radius=8)
-            elif items.air[0] > items.default_temperature:                # Heat air
-                pygame.draw.circle(screen, [250,50,50], (156,400), 8)
-            else:                                                       # If the default temperature is equal to the temperature selected
-                pygame.draw.circle(screen, [50,50,250], (140,400), 8)
-                pygame.draw.circle(screen, [250,50,50], (156,400), 8)
+        if items.air[0] == 1:       # Cold air
+            pygame.draw.circle(screen, BLUE, center=(140,400), radius=8)
+        
+        elif items.air[0] == 2:     # Heat air
+            pygame.draw.circle(screen, RED, center=(156,400), radius=8)
         
 
 class ApplianceWindow():
@@ -549,16 +680,32 @@ class ApplianceWindow():
         screen.blit(self.aplliance_plan_img, self.aplliance_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        self.check_appliance_status(items)
+        tr = self.check_appliance_status(items)
         self.print_appliance_indicator(screen, items)
         self.do_appliance_simulation(screen, items)
 
+        return tr
+
     def check_appliance_status(self, items):
+        global last_mouse_state
         mx, my = pygame.mouse.get_pos()
         if mx > 165 and mx < 275 and my > 350 and my < 420: 
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    items.appliance = not items.appliance
+            mouse_state = pygame.mouse.get_pressed()
+            last_mouse_state += 1
+            if mouse_state[0] == True and last_mouse_state > 25:
+                if items.appliance == 1:
+                    items.appliance = 0
+                elif items.appliance == 0:
+                    items.appliance = 1
+                last_mouse_state = 0
+                tr = items.get_trama()
+                return tr
+            else:
+                tr = str(int(0))
+                return tr
+        else:
+            tr = str(int(0))
+            return tr
 
     def print_appliance_indicator(self,screen,items):
         if items.appliance == True:
@@ -584,44 +731,60 @@ class BlindWindow():
         self.blind_plan_img =   pygame.image.load(BLIND_WINDOW_BG)
         self.blind_plan_rect=   self.blind_plan_img.get_rect(center=(WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2))
 
+        # Defining Buttons
+        self.blind_up         = Button("^", BTN_BLIND_UP_POS, BTN_BLIND_UP_WIDTH, BTN_BLIND_UP_HEIGHT, 0, pygame.font.Font(None,30), GREY, GREY, border_radius=0)
+        self.blind_down       = Button("^", BTN_BLIND_DOWN_POS, BTN_BLIND_DOWN_WIDTH, BTN_BLIND_DOWN_HEIGHT, 0, pygame.font.Font(None,30), GREY, GREY, flip=True, border_radius=0)
+
+
     def print_blind_window(self, screen, functions, items):
         screen.blit(self.blind_plan_img, self.blind_plan_rect)
         self.go_back_button.draw(screen, functions[0])
 
-        self.check_blind_status(items)
+        # Print blind buttons         
+        self.blind_up.draw(screen,functions[1])
+        self.blind_down.draw(screen,functions[2])
+
+        # Print separation  
+        pygame.draw.line(screen,DARK_GREY,(62,94),(98,94),2)
+
+        #tr = self.check_blind_status(items)
         self.print_blind_indicator(screen,items)
         self.do_blind_simulation(screen,items)
+
+        tr = items.get_trama()
+        return tr
 
     def check_blind_status(self,items):
         mx, my = pygame.mouse.get_pos()
         if mx > 25 and mx < 50 and my > 15 and my < 160: 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    items.blind[1] = not items.blind[1]
+                    items.blind = not items.blind
 
     def print_blind_indicator(self,screen,items):
-        if items.blind[1] == True:                  # Blinds On
-            if items.blind[0] < items.blind_top:
-                blind_text = pygame.font.Font(None,20).render("Blind Going up",True, [50,250,50])
-                blind_rect = blind_text.get_rect(left=35, top=25)
-            elif items.blind[1] > items.blind_top:
-                blind_text = pygame.font.Font(None,20).render("Blind Going down",True, [50,250,50])
-                blind_rect = blind_text.get_rect(left=35, top=25)
-        else:
+        if items.blind == 0:
             blind_text = pygame.font.Font(None,20).render("Blind Going Off",True, [250,50,50])
             blind_rect = blind_text.get_rect(left=35, top=25)
+        elif items.blind == 1:
+            blind_text = pygame.font.Font(None,20).render("Blind Going up",True, [50,250,50])
+            blind_rect = blind_text.get_rect(left=35, top=25)
+        elif items.blind == 2:
+            blind_text = pygame.font.Font(None,20).render("Blind Going down",True, [50,250,50])
+            blind_rect = blind_text.get_rect(left=35, top=25)            
 
         screen.blit(blind_text,blind_rect)
 
     def do_blind_simulation(self,screen,items):
-        if items.blind[1] == True:
+        if items.blind == True:
             pass
 
 class Slider():
     def __init__(self, screen, text, tam_text, text_color, text_pos, 
                 bar_color, bar_pos, bar_width, bar_height, left_bar_text, left_bar_text_pos, right_bar_text, right_bar_text_pos,
                 slider_color, slider_pos, slider_width, slider_height,
-                division = 100, info=False, info_pos=None, offset=0):
+                division = 100, info=False, info_pos=None, offset=0, button_control=0):
+
+        self.data = str("00")
 
         self.mark = slider_pos[0]
 
@@ -636,6 +799,7 @@ class Slider():
         self.slider_pos = slider_pos
         self.division = division
         self.offset = offset
+        self.button_control = button_control
 
         self.text = pygame.font.Font(None,tam_text).render(text, True, text_color)
         self.rect = self.text.get_rect(center=(text_pos[0],text_pos[1]))
@@ -669,11 +833,14 @@ class Slider():
         self.screen.blit(self.zero_wh_text, self.zero_wh_rect)   # Print the left indicator  - limit
         self.screen.blit(self.tfour_wh_text, self.tfour_wh_rect) # Print the right indicator - limit
 
-        if pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[self.button_control]:
             mx,my = pygame.mouse.get_pos()
 
             if mx > self.bar_pos[0] and mx < (self.bar_pos[0]+self.bar_width) and my > self.slider_pos[1] and my < self.slider_pos[1] + self.slider_height:
                 self.mark = mx 
+                self.data = str(int(self.division*((self.mark-self.bar_pos[0]+5)/self.bar_width)) + int(self.offset))
+
+        return self.data
 
 
 class SettingsWindow():
@@ -705,42 +872,63 @@ class SettingsWindow():
         self.t_slider  = Slider(screen,T_TEXT,T_TEXT_TAM,T_TEXT_COLOR,T_TEXT_POS,
                                 T_BAR_COLOR,T_BAR_POS,T_BAR_WIDTH,T_BAR_HEIGHT,T_LEFT_BAR_TEXT,T_LEFT_BAR_TEXT_POS,T_RIGHT_BAR_TEXT,T_RIGHT_BAR_TEXT_POS,
                                 T_SLIDER_COLOR,T_SLIDER_POS,T_SLIDER_WIDTH,T_SLIDER_HEIGHT,
-                                15,info=True,info_pos = T_INFO_POS)
+                                15,info=True,info_pos = T_INFO_POS,offset=15)
 
         self.trm_slider= Slider(screen,TR_TEXT,TR_TEXT_TAM,TR_TEXT_COLOR,TR_TEXT_POS,
                                 TR_BAR_COLOR,TR_BAR_POS,TR_BAR_WIDTH,TR_BAR_HEIGHT,TR_LEFT_BAR_TEXT,TR_LEFT_BAR_TEXT_POS,TR_RIGHT_BAR_TEXT,TR_RIGHT_BAR_TEXT_POS,
                                 TR_SLIDER_COLOR,TR_SLIDER_POS,TR_SLIDER_WIDTH,TR_SLIDER_HEIGHT,
-                                15,info=True,info_pos = TR_INFO_POS,offset=15)
+                                15,info=True,info_pos = TR_INFO_POS,offset=15,button_control=0)
         
         self.trM_slider= Slider(screen,TRM_TEXT,TRM_TEXT_TAM,TRM_TEXT_COLOR,TRM_TEXT_POS,
                                 TRM_BAR_COLOR,TRM_BAR_POS,TRM_BAR_WIDTH,TRM_BAR_HEIGHT,TRM_LEFT_BAR_TEXT,TRM_LEFT_BAR_TEXT_POS,TRM_RIGHT_BAR_TEXT,TRM_RIGHT_BAR_TEXT_POS,
                                 TRM_SLIDER_COLOR,TRM_SLIDER_POS,TRM_SLIDER_WIDTH,TRM_SLIDER_HEIGHT,
-                                15,info=True,info_pos = TRM_INFO_POS,offset=15)
+                                15,info=True,info_pos = TRM_INFO_POS,offset=15,button_control=2)
 
         self.lt_slider = Slider(screen,LT_TEXT,LT_TEXT_TAM,LT_TEXT_COLOR,LT_TEXT_POS,
                                 LT_BAR_COLOR,LT_BAR_POS,LT_BAR_WIDTH,LT_BAR_HEIGHT,LT_LEFT_BAR_TEXT,LT_LEFT_BAR_TEXT_POS,LT_RIGHT_BAR_TEXT,LT_RIGHT_BAR_TEXT_POS,
                                 LT_SLIDER_COLOR,LT_SLIDER_POS,LT_SLIDER_WIDTH,LT_SLIDER_HEIGHT,
-                                DIV,info=True,info_pos = LT_INFO_POS)
+                                DIV,info=True,info_pos = LT_INFO_POS, button_control=0)
+
+        self.ltm_slider = Slider(screen,LTM_TEXT,LTM_TEXT_TAM,LTM_TEXT_COLOR,LTM_TEXT_POS,
+                                LTM_BAR_COLOR,LTM_BAR_POS,LTM_BAR_WIDTH,LTM_BAR_HEIGHT,LTM_LEFT_BAR_TEXT,LTM_LEFT_BAR_TEXT_POS,LTM_RIGHT_BAR_TEXT,LTM_RIGHT_BAR_TEXT_POS,
+                                LTM_SLIDER_COLOR,LTM_SLIDER_POS,LTM_SLIDER_WIDTH,LTM_SLIDER_HEIGHT,
+                                DIV,info=True,info_pos = LTM_INFO_POS, button_control=2)
 
     def print_settings_window(self, screen, functions, items):
         # Go back button
         self.go_back_button.draw(screen, functions[0])
         self.send_setting_button.draw(screen, functions[1])
-        
+       
         # Title text
         self.setting_text = pygame.font.Font(None,40).render("SETTINGS", True, BLACK)
         self.setting_rect = self.setting_text.get_rect(center=(WINDOW_SIZE[0]/2, 15))
         screen.blit(self.setting_text,self.setting_rect)
 
         # Wake hour slider
-        self.wh_slider.draw()
-        self.nh_slider.draw()
-        self.bh_slider.draw()
-        self.st_slider.draw()
-        self.st_slider.draw()
-        self.t_slider.draw()
-        self.trm_slider.draw()
-        self.trM_slider.draw()
-        self.lt_slider.draw()
+        items.wake_hour     = self.wh_slider.draw()
+        if len(items.wake_hour) < 2: items.wake_hour = str(int(0)) + items.wake_hour
 
+        items.no_home_time  = self.nh_slider.draw()
+        if len(items.no_home_time) < 2: items.no_home_time = str(int(0)) + items.no_home_time
 
+        items.back_home_hour= self.bh_slider.draw()
+        if len(items.back_home_hour) < 2: items.back_home_hour = str(int(0)) + items.back_home_hour
+        
+        items.sleep_time    = self.st_slider.draw()
+        if len(items.sleep_time) < 2: items.sleep_time = str(int(0)) + items.sleep_time
+
+        items.temperature   = self.t_slider.draw()
+        items.temperature_m = self.trm_slider.draw()
+        items.temperature_M = self.trM_slider.draw()
+        
+        items.laundry_time_m= self.lt_slider.draw()
+        if len(items.laundry_time_m) < 2: items.laundry_time_m = str(int(0)) + items.laundry_time_m
+
+        items.laundry_time_M= self.ltm_slider.draw()
+        if len(items.laundry_time_M) < 2: items.laundry_time_M = str(int(0)) + items.laundry_time_M
+
+        # if pressed == True:
+        #     pressed = False
+        #     return items.get_trama_settings(), pressed
+        # else:
+        #     return str(int(0)), pressed

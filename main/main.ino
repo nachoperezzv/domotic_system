@@ -9,6 +9,22 @@ WiFiServer server(port);
 String msg;
 String trama;
 
+// Variables for the connections
+String led = "1";
+String tv = "1";
+String air = "1";
+String temp1 = "2";
+String temp2 = "3";
+String appliance = "1";
+String blind = "1";
+
+String get_trama()
+{
+  String str = led + tv + air + temp1 + temp2 + appliance + blind;
+  Serial.println(str);
+  return str;
+}
+
 void setup() {
   Serial_SetUp();  
   ESP8266_SetUp();
@@ -58,107 +74,70 @@ void loop() {
         }
 
         // If the interfaces it's only asking for info and don't want to make changes
-        else if(msg == "0")
+        if(msg == "0")
         {
           //do nothing 
-          Serial.println(trama); 
+          trama = get_trama();
         }
-        else if(msg.startsWith("11"))
+        else 
         {
-          led = "1";
-          Serial.println(trama);
+          if(msg.substring(1,2).toInt() == 1)
+          {
+            led = "1";
+          }
+          if(msg.substring(1,2).toInt() == 0)
+          {
+            led = "0";
+          }
+          if(msg.substring(2,3).toInt() == 0)
+          {
+            tv = "0";
+          }
+          if(msg.substring(2,3).toInt() == 1)
+          {
+            tv = "1";
+          }
+          if(msg.substring(3,4).toInt() == 0)
+          {
+            air = "0";
+          }
+          if(msg.substring(3,4).toInt() == 1)
+          {
+            air = "1";
+          }
+          if(msg.substring(6,7).toInt() == 0)
+          {
+            appliance = "0";
+          }
+          if(msg.substring(6,7).toInt() == 1)
+          {
+            appliance = "1";
+          }
+          if(msg.substring(7,8).toInt() == 0)
+          {
+            blind = "0";
+          }
+          if(msg.substring(7,8).toInt() == 1)
+          {
+            blind = "1";
+          }
         }
-        else if(msg.startsWith("10"))
-        {
-          led = "0";
-          Serial.println(trama);
-        }
-
+        Serial.print(led);
+        Serial.print(tv);
+        Serial.print(air);
+        Serial.print(temp1);
+        Serial.print(temp2);
+        Serial.print(appliance);
+        Serial.println(blind);
+        
         trama = get_trama();
+        
         char buf[8];
         trama.toCharArray(buf,8);
         client.write(buf);
-                
-//        // LED TRAMA
-//        else if(msg.startsWith("10")) // Trama for LED_WRITE
-//        {
-//          // Interface is writing and changing the status of the LED
-//          if(msg=="100")        // LED is Off
-//            led = '0';
-//          else if(msg=="101")   // LED is On
-//            led = '1';
-//        }
-//        else if(msg.startsWith("11")) // Trama for LED_READ
-//        {
-//          // Interface is asking for the status of the led
-//          client.write(led);
-//        }
-//  
-//        // TV TRAMA
-//        else if(msg.startsWith("20"))  // Trama for TV_WRITE
-//        {
-//          // Interface is writing and changing the status of the TV
-//          if(msg=="200")      // TV is off
-//            tv = '0';          
-//          else if(msg=="201") // TV is on
-//            tv = '1';
-//        }
-//        else if(msg.startsWith("21"))   // Trama for TV_READ
-//        {
-//          // Interface is asking for the status of the TV
-//          client.write(tv);
-//        }
-//  
-//        // AIR TRAMA
-//        else if(msg.startsWith("300")) // Trama for AIR_WRITE
-//        {
-//          // Interface is writting and changing the status of the AIR
-//          if(msg=="300")      // Air is off
-//            air = '0';  
-//          else if(msg=="301") // Air is on - HOT
-//            air = '1';
-//          else if(msg=="302") // Air is on - COLD
-//            air = '2';            
-//        }
-//        else if(msg.startsWith("31"))  // Trama for AIR_READ
-//        {
-//          // Interface is asking for the status of the air
-//          client.write(air);
-//        }
-//  
-//        // APPLIANCE TRAMA
-//        else if(msg.startsWith("40"))  // Trama for APPLIANCE_WRITE
-//        {
-//          // Interface is writting and changing the status of the APPLIANCE
-//          if(msg=="400")      // Appliance is off
-//            appliance = '0';
-//          else if(msg=="401") // Appliance is on
-//            appliance = '1';
-//        }
-//        else if(msg.startsWith("41"))  // Trama for APPLIANCE_READ
-//        {
-//          // Interface is asking for the status of the AIR
-//          client.write(appliance);
-//        }
-//  
-//        // BLIND TRAMA
-//        else if(msg.startsWith("50"))  //Trama for the BLINDS_WRITE
-//        {
-//          // Interface is writting and changing the status of the BLINDS
-//          if(msg=="500")      // Blind is off
-//            blind = '0';
-//          else if(msg=="501") // Blind is up
-//            blind = '1';
-//          else if(msg=="502") // Blind is down
-//            blind = '2';            
-//        }
-//        else if(msg.startsWith("51"))  // Trama for the BLINDS_READ
-//        {
-//          // Interface is asling for the status of the BLINDS
-//          client.write(blind);
-//        }
+
+        Serial.println(trama);
         
-        //Serial.println(msg);
         msg.clear();
       }
          

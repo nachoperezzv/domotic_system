@@ -35,8 +35,10 @@ items = Items()
 # Initializing the tcp/ip of the house |
 # --------------------------------------
 # Creates the tcp/ip connection object
-trama   = "0"
+trama   = str(int(0))
 data    = ""
+pressed = bool(False)
+
 
 class TCPIPconnection():
     def __init__(self):
@@ -80,16 +82,15 @@ class TCPIPconnection():
         global items, data
         items.led = int(data[0])
         items.tv = int(data[1])
-        items.air[1] = int(data[2])
-        items.appliance = int(data[3])
-        items.blind[1] = int(data[4])
+        items.air[0] = items.air_onoff = int(data[2])
+        items.air[1] = int(data[3])*int(10) + int(data[4])
+        items.appliance = int(data[5])
+        items.blind = int(data[6])
 
     def close(self):
         self.sock.close()
 
  
-# tcpip = TCPIPconnection()
-# tcpip.connect(IP,PORT)
 tcpip = TCPIPconnection()
 
 # ---------------------------------
@@ -164,17 +165,72 @@ def moving_to_setting_window():
     global current_screen
     current_screen = 7
 
+def change_air_onoff():
+    global items
+    if items.air[0] == 0:
+        items.air[0] = 1
+    elif items.air[0] == 1:
+        items.air[0] == 0
+
+def change_air_mode():
+    global items, trama
+    if items.air_mode_ma == 0:
+        items.air_mode_ma = 1
+    elif items.air_mode_ma == 1:
+        items.air_mode_ma = 0
+    
+def up_temperature():
+    global items, trama
+    if items.air[1] < 30 and not items.air[0] == 0:    
+        items.air[1] = items.air[1] + 1
+    
+    trama = items.get_trama()
+    print(trama)
+
+def down_temperature():
+    global items, trama
+    if items.air[1] > 15 and not items.air[0] == 0:  
+        items.air[1] = items.air[1] - 1
+
+    trama = items.get_trama()
+    print(trama)
+
+def up_blind():
+    global items, trama
+    if items.blind == 0 or items.blind == 2:    
+        items.blind = 1 
+    else:
+        items.blind = 0
+    print("up")
+    trama = items.get_trama()
+
+def down_blind():
+    global items,trama
+    if items.blind == 0 or items.blind == 1:   
+        items.blind = 2
+    else:
+        items.blind = 0
+    print("down")
+    trama = items.get_trama()
+
 def send_settings_data():
-    pass
+    global trama, items
+    trama = items.get_trama_settings()
 
 # Let's just create a vector that contains all the functions just so it will be easier to call the function print of the main buttons
-main_functions      = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window, moving_to_air_window, moving_to_appliance_window ,moving_to_blind_window, moving_to_setting_window]
+main_functions      = [moving_to_weather_window, moving_to_light_window, moving_to_tv_window,
+                        moving_to_air_window, moving_to_appliance_window ,
+                        moving_to_blind_window, moving_to_setting_window]
+
 weather_functions   = [moving_to_main_window]
 lights_functions    = [moving_to_main_window]
 tv_functions        = [moving_to_main_window]
-air_functions       = [moving_to_main_window]
+
+air_functions       = [moving_to_main_window, change_air_onoff, change_air_mode, 
+                        up_temperature, down_temperature]
+
 appliance_functions = [moving_to_main_window]
-blinds_functions    = [moving_to_main_window]
+blinds_functions    = [moving_to_main_window, up_blind, down_blind]
 settings_functions  = [moving_to_main_window, send_settings_data]
 
 # --------------------------
@@ -233,28 +289,24 @@ while DoIt:
     # Checking which window we have to print, but first we fill the background with a default color
     screen.fill(HIPER_LIGHT_BLUE)
 
-    # print(pygame.mouse.get_pos())
-
-    # t.join()
-
     if current_screen == 0:
         main_window.print_main_window(screen, main_functions, cw, rain)
     elif current_screen == 1:
         weather_window.print_weather_window(screen, weather_functions)
     elif current_screen == 2:
         trama = light_window.print_lights_window(screen, lights_functions, items)
-        # print(trama)
     elif current_screen == 3:
-        tv_window.print_tv_window(screen, tv_functions, items)
+        trama = tv_window.print_tv_window(screen, tv_functions, items)
     elif current_screen == 4:
         air_window.print_air_window(screen, air_functions, items)
     elif current_screen == 5:
-        appliance_window.print_appliance_window(screen, appliance_functions, items)
+        trama = appliance_window.print_appliance_window(screen, appliance_functions, items)
     elif current_screen == 6:
-        blind_window.print_blind_window(screen, blinds_functions, items)
+        trama = blind_window.print_blind_window(screen, blinds_functions, items)
     elif current_screen == 7:
         settings_window.print_settings_window(screen, settings_functions, items)
     
+    # print(trama)
     pygame.display.flip()
 
 # Closing the socket
